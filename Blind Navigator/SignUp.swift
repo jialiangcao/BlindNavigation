@@ -12,44 +12,60 @@ struct SignUp: View {
     @State private var email: String = ""
     @State private var desiredPassword: String = ""
     @State private var passwordConfirmation: String = ""
+    @State private var errorMessage: String? = nil
     
     func createAccount() {
+        errorMessage = nil
         if email == "" || isValidEmail(email) == false {
-            print("Please enter a valid email address")
+            errorMessage = "Please enter a valid email address"
             return
         }
         if desiredPassword == "" {
-            print("Please enter a password")
+            errorMessage = "Please enter a password"
             return
         }
         if passwordConfirmation == "" {
-            print("Please confirm your password")
+            errorMessage = "Please confirm your password"
             return
         }
         if desiredPassword.count<8 {
-            print("Password must be at least 8 characters long")
+            errorMessage = "Password must be at least 8 characters long"
             return
         }
         if desiredPassword != passwordConfirmation {
-            print("Passwords do not match")
+            errorMessage = "Passwords do not match"
             return
         }
         
         Auth.auth().createUser(withEmail: email, password: desiredPassword) { authResult, error in
-            if let authResult = authResult {
+            // Not currently used
+            if let _ = authResult {
                 print("Sign-up successful")
             }
+            
+            // Firebase specific errors
             if let error = error {
-                print("Error creating user: \(error)")
+                if let errCode = AuthErrorCode(rawValue: error._code) {
+                    switch errCode {
+                    case .emailAlreadyInUse:
+                        errorMessage = "Email already in use"
+                    case .invalidEmail:
+                        errorMessage = "Invalid Email"
+                    case .networkError:
+                        errorMessage = "Network issue detected. Please check your connection and try again."
+                    default:
+                        errorMessage = "Error creating account: \(error), please try again."
+                    }
+                }
                 return
             }
         }
     }
     
     private func isValidEmail(_ email: String) -> Bool {
-            let regex = "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
-            let test = NSPredicate(format:"SELF MATCHES %@", regex)
-            return test.evaluate(with: email)
+        let regex = "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        let test = NSPredicate(format:"SELF MATCHES %@", regex)
+        return test.evaluate(with: email)
     }
     
     var body: some View {
@@ -94,7 +110,7 @@ struct SignUp: View {
                 )
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
-
+                
                 SecureField(
                     "Create Password",
                     text: $desiredPassword
@@ -117,7 +133,7 @@ struct SignUp: View {
                     .fontWeight(.light)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
-
+                
                 SecureField(
                     "Confirm Password",
                     text: $passwordConfirmation
@@ -136,13 +152,20 @@ struct SignUp: View {
                 .keyboardType(.default)
                 
                 Button(action: createAccount) {
-                        Label("Sign Up", systemImage: "arrow.up")
-                            .frame(width: 340)
-                    }
-                    .padding()
-                    .background(Color.mint)
-                    .foregroundStyle(Color.white)
-                    .cornerRadius(20)
+                    Label("Sign Up", systemImage: "arrow.up")
+                        .frame(width: 340)
+                }
+                .padding()
+                .background(Color.mint)
+                .foregroundStyle(Color.white)
+                .cornerRadius(20)
+                
+                if let errorMessage = errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .padding(.top, 10)
+                        .multilineTextAlignment(.center)
+                }
             }
             .padding()
         }

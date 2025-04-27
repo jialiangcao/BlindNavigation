@@ -11,23 +11,55 @@ import FirebaseAuth
 struct SignIn: View {
     @State private var email: String = ""
     @State private var password: String = ""
+    @State private var errorMessage: String? = nil
     
     func authenticate() {
+        errorMessage = nil
         if email == "" {
-            print("Please enter an email address")
+            errorMessage = "Please enter an email address"
             return
         }
         if password == "" {
-            print("Please enter a password")
+            errorMessage = "Please enter a password"
             return
         }
         
         Auth.auth().signIn(withEmail: email, password: password) { authResult, error in
-            if let error = error {
-                print("Failed to authenticate with error: \(error.localizedDescription)")
+            // Firebase specific errors
+            if let error = error as NSError? {
+                if let errCode = AuthErrorCode(rawValue: error._code) {
+                    switch errCode {
+                    case .invalidCredential:
+                        errorMessage = "Invalid email or password."
+                    case .userNotFound:
+                        errorMessage = "User not found. Please sign up."
+                    case .wrongPassword:
+                        errorMessage = "Invalid email or password."
+                    case .networkError:
+                        errorMessage = "Network error. Please try again."
+                    case .tooManyRequests:
+                        errorMessage = "Too many requests. Please try again later."
+                    default:
+                        errorMessage = "Error logging in: \(error), please try again."
+                    }
+                }
                 return
             }
-            print("Authentication successful!")
+        }
+    }
+    
+    private func requestReset() {
+        guard !email.isEmpty else {
+            errorMessage = "Please enter your email address."
+            return
+        }
+        
+        Auth.auth().sendPasswordReset(withEmail: email) { error in
+            if let error = error {
+                errorMessage = error.localizedDescription
+            } else {
+                errorMessage = "Password reset email sent successfully. Please check your inbox."
+            }
         }
     }
     
@@ -74,7 +106,7 @@ struct SignIn: View {
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
                 .keyboardType(.default)
-
+                
                 SecureField(
                     "Password",
                     text: $password
@@ -91,16 +123,31 @@ struct SignIn: View {
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
                 .keyboardType(.default)
-
+                
                 
                 Button(action: authenticate) {
-                        Label("Log In", systemImage: "arrow.right")
-                            .frame(width: 340)
-                    }
-                    .padding()
-                    .background(Color.mint)
-                    .foregroundStyle(Color.white)
-                    .cornerRadius(20)
+                    Label("Log In", systemImage: "arrow.right")
+                        .frame(width: 340)
+                }
+                .padding()
+                .background(Color.mint)
+                .foregroundStyle(Color.white)
+                .cornerRadius(20)
+                
+                Button(action: requestReset) {
+                    Text("Forgot Password?")
+                        .foregroundColor(.blue)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                }
+                
+                if let errorMessage = errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .padding(.top, 10)
+                        .multilineTextAlignment(.center)
+                }
+                
             }
             .padding()
         }
