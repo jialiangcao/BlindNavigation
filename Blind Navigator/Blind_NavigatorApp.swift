@@ -6,14 +6,20 @@
 //
 
 import SwiftUI
+import FirebaseCore
+import FirebaseAuth
 
 @main
 struct Blind_NavigatorApp: App {
-    @State private var signedIn = false
-    
+    // Firebase
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    // Will automatically re-evaluate if state is changed
+    @StateObject private var session = SessionStore()
+   
     var body: some Scene {
         WindowGroup {
-            if (!signedIn) {
+            if session.user == nil {
+              // No user is signed in
                 LoginPage()
             } else {
                 MapPage()
