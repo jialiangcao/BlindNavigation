@@ -8,8 +8,6 @@ import SwiftUI
 import FirebaseAuth
 
 struct HomePage: View {
-    @State private var isMapViewActive = false
-    
     private func signOut() {
         do {
             try Auth.auth().signOut()
@@ -19,26 +17,16 @@ struct HomePage: View {
     }
     
     var body: some View {
-        NavigationView {
-            VStack {
+        TabView {
+            Tab("Predictions", systemImage: "waveform.path") {
+                Text("Hello world")
                 Button(action: signOut) {
                     Text("Sign Out")
                 }
-                TabView {
-                    Text("Hello world")
-                }
             }
-            .gesture(DragGesture().onEnded { value in
-                if value.translation.width < -100 {
-                    self.isMapViewActive = true
-                }
-            })
-            .background(NavigationLink(
-                destination: MapView(),
-                isActive: $isMapViewActive,
-                label: { EmptyView() }
-            )
-            )
+            Tab("Maps", systemImage: "map.fill") {
+                MapView()
+            }
         }
     }
 }
