@@ -22,7 +22,7 @@ struct Blind_NavigatorApp: App {
               // No user is signed in
                 LoginPage()
             } else {
-                MapPage()
+                HomePage()
             }
         }
     }

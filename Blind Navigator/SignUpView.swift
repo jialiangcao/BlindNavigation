@@ -1,5 +1,5 @@
 //
-//  SignIn.swift
+//  SignUp.swift
 //  Blind Navigator
 //
 //  Created by Jialiang Cao on 4/27/25.
@@ -8,39 +8,53 @@
 import SwiftUI
 import FirebaseAuth
 
-struct SignIn: View {
+struct SignUpView: View {
     @State private var email: String = ""
-    @State private var password: String = ""
+    @State private var desiredPassword: String = ""
+    @State private var passwordConfirmation: String = ""
     @State private var errorMessage: String? = nil
     
-    func authenticate() {
+    func createAccount() {
         errorMessage = nil
-        if email == "" {
-            errorMessage = "Please enter an email address"
+        if email == "" || isValidEmail(email) == false {
+            errorMessage = "Please enter a valid email address"
             return
         }
-        if password == "" {
+        if desiredPassword == "" {
             errorMessage = "Please enter a password"
             return
         }
+        if passwordConfirmation == "" {
+            errorMessage = "Please confirm your password"
+            return
+        }
+        if desiredPassword.count<8 {
+            errorMessage = "Password must be at least 8 characters long"
+            return
+        }
+        if desiredPassword != passwordConfirmation {
+            errorMessage = "Passwords do not match"
+            return
+        }
         
-        Auth.auth().signIn(withEmail: email, password: password) { authResult, error in
+        Auth.auth().createUser(withEmail: email, password: desiredPassword) { authResult, error in
+            // Not currently used
+            if let _ = authResult {
+                print("Sign-up successful")
+            }
+            
             // Firebase specific errors
-            if let error = error as NSError? {
+            if let error = error {
                 if let errCode = AuthErrorCode(rawValue: error._code) {
                     switch errCode {
-                    case .invalidCredential:
-                        errorMessage = "Invalid email or password."
-                    case .userNotFound:
-                        errorMessage = "User not found. Please sign up."
-                    case .wrongPassword:
-                        errorMessage = "Invalid email or password."
+                    case .emailAlreadyInUse:
+                        errorMessage = "Email already in use"
+                    case .invalidEmail:
+                        errorMessage = "Invalid Email"
                     case .networkError:
-                        errorMessage = "Network error. Please try again."
-                    case .tooManyRequests:
-                        errorMessage = "Too many requests. Please try again later."
+                        errorMessage = "Network issue detected. Please check your connection and try again."
                     default:
-                        errorMessage = "Error logging in: \(error), please try again."
+                        errorMessage = "Error creating account: \(error), please try again."
                     }
                 }
                 return
@@ -48,19 +62,10 @@ struct SignIn: View {
         }
     }
     
-    private func requestReset() {
-        guard !email.isEmpty else {
-            errorMessage = "Please enter your email address."
-            return
-        }
-        
-        Auth.auth().sendPasswordReset(withEmail: email) { error in
-            if let error = error {
-                errorMessage = error.localizedDescription
-            } else {
-                errorMessage = "Password reset email sent successfully. Please check your inbox."
-            }
-        }
+    private func isValidEmail(_ email: String) -> Bool {
+        let regex = "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        let test = NSPredicate(format:"SELF MATCHES %@", regex)
+        return test.evaluate(with: email)
     }
     
     var body: some View {
@@ -84,7 +89,7 @@ struct SignIn: View {
             .edgesIgnoringSafeArea(.all)
             
             VStack {
-                Text("Log In")
+                Text("Sign Up")
                     .fontWeight(.bold)
                     .font(.title)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -105,11 +110,10 @@ struct SignIn: View {
                 )
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
-                .keyboardType(.default)
                 
                 SecureField(
-                    "Password",
-                    text: $password
+                    "Create Password",
+                    text: $desiredPassword
                 )
                 .frame(width: 340)
                 .padding()
@@ -124,9 +128,31 @@ struct SignIn: View {
                 .disableAutocorrection(true)
                 .keyboardType(.default)
                 
+                Text("Password must be atleast 8 characters long")
+                    .font(.caption)
+                    .fontWeight(.light)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
                 
-                Button(action: authenticate) {
-                    Label("Log In", systemImage: "arrow.right")
+                SecureField(
+                    "Confirm Password",
+                    text: $passwordConfirmation
+                )
+                .frame(width: 340)
+                .padding()
+                .background(Color.white)
+                .foregroundStyle(Color.black)
+                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.black.opacity(0.6), lineWidth: 2)
+                )
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
+                .keyboardType(.default)
+                
+                Button(action: createAccount) {
+                    Label("Sign Up", systemImage: "arrow.up")
                         .frame(width: 340)
                 }
                 .padding()
@@ -134,20 +160,12 @@ struct SignIn: View {
                 .foregroundStyle(Color.white)
                 .cornerRadius(20)
                 
-                Button(action: requestReset) {
-                    Text("Forgot Password?")
-                        .foregroundColor(.blue)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
-                }
-                
                 if let errorMessage = errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
                         .padding(.top, 10)
                         .multilineTextAlignment(.center)
                 }
-                
             }
             .padding()
         }
@@ -155,7 +173,6 @@ struct SignIn: View {
 }
 
 #Preview {
-    SignIn()
+    SignUpView()
 }
-
 

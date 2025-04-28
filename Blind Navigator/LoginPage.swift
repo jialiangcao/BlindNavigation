@@ -44,7 +44,7 @@ struct LoginPage: View {
                     
                     // Login
                     VStack {
-                        NavigationLink(destination: SignUp()) {
+                        NavigationLink(destination: SignUpView()) {
                             Label("Sign up", systemImage: "arrow.up")
                                 .frame(width: 340)
                         }
@@ -57,7 +57,7 @@ struct LoginPage: View {
                                 .stroke(Color.black.opacity(0.6), lineWidth: 2)
                         )
                         
-                        NavigationLink(destination: SignIn()) {
+                        NavigationLink(destination: SignInView()) {
                             Label("Log In", systemImage: "arrow.right")
                                 .frame(width: 340)
                         }
