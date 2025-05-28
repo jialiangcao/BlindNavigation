@@ -1,17 +1,16 @@
 //
-//  SessionStore.swift
+//  AuthStore.swift
 //  Blind Navigator
 //
 //  Created by Jialiang Cao on 4/26/25.
 //
-// Observable Object that publishes FirebaseAuth authentication state changes
+// Handles Signed In/Out user-state
 //
 
 import SwiftUI
 import FirebaseAuth
 
-// Not inheritable
-final class SessionStore: ObservableObject {
+final class AuthStore: ObservableObject {
     // Observable, will trigger changes in listeners
     @Published var user: FirebaseAuth.User?
     private var authHandle: AuthStateDidChangeListenerHandle?

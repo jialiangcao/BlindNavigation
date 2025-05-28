@@ -13,16 +13,19 @@ import FirebaseAuth
 struct Blind_NavigatorApp: App {
     // Firebase
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    // Will automatically re-evaluate if state is changed
-    @StateObject private var session = SessionStore()
+    @StateObject private var authStore = AuthStore()
+    @StateObject private var sessionManager = SessionManager()
    
     var body: some Scene {
         WindowGroup {
-            if session.user == nil {
-              // No user is signed in
+            if authStore.user == nil {
                 LoginPage()
             } else {
-                HomePage()
+                if sessionManager.isSessionActive {
+                    ActiveSessionView(sessionManager: sessionManager)
+                } else {
+                    StartSessionView(sessionManager: sessionManager)
+                }
             }
         }
     }
