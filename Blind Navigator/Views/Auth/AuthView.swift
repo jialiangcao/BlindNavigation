@@ -1,5 +1,5 @@
 //
-//  LoginPage.swift
+//  AuthView.swift
 //  Blind Navigator
 //
 //  Created by Jialiang Cao on 4/26/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct LoginPage: View {
+struct AuthView: View {
     var body: some View {
         NavigationStack {
             ZStack {
@@ -73,5 +73,5 @@ struct LoginPage: View {
 }
 
 #Preview {
-    LoginPage()
+    AuthView()
 }

@@ -8,7 +8,7 @@ import SwiftUI
 import MapKit
 
 struct ActiveSessionView: View {
-    @ObservedObject var sessionManager: SessionManager
+    @ObservedObject var sessionViewModel: SessionViewModel
     let endSession: () -> Void
     
     @State private var cameraPosition = MapCameraPosition.region(
@@ -24,7 +24,7 @@ struct ActiveSessionView: View {
                 Map(position: $cameraPosition, interactionModes: .all) {
                     UserAnnotation()
                 }
-                .onReceive(sessionManager.$userLocation) { location in
+                .onReceive(sessionViewModel.$userLocation) { location in
                     if let loc = location {
                         let region = MKCoordinateRegion(
                             center: loc,
@@ -42,5 +42,5 @@ struct ActiveSessionView: View {
 }
 
 #Preview {
-    ActiveSessionView(sessionManager: SessionManager(), endSession: {})
+    ActiveSessionView(sessionViewModel: SessionViewModel(), endSession: {})
 }

@@ -9,59 +9,7 @@ import SwiftUI
 import FirebaseAuth
 
 struct SignInView: View {
-    @State private var email: String = ""
-    @State private var password: String = ""
-    @State private var errorMessage: String? = nil
-    
-    func authenticate() {
-        errorMessage = nil
-        if email == "" {
-            errorMessage = "Please enter an email address"
-            return
-        }
-        if password == "" {
-            errorMessage = "Please enter a password"
-            return
-        }
-        
-        Auth.auth().signIn(withEmail: email, password: password) { authResult, error in
-            // Firebase specific errors
-            if let error = error as NSError? {
-                if let errCode = AuthErrorCode(rawValue: error._code) {
-                    switch errCode {
-                    case .invalidCredential:
-                        errorMessage = "Invalid email or password."
-                    case .userNotFound:
-                        errorMessage = "User not found. Please sign up."
-                    case .wrongPassword:
-                        errorMessage = "Invalid email or password."
-                    case .networkError:
-                        errorMessage = "Network error. Please try again."
-                    case .tooManyRequests:
-                        errorMessage = "Too many requests. Please try again later."
-                    default:
-                        errorMessage = "Error logging in: \(error), please try again."
-                    }
-                }
-                return
-            }
-        }
-    }
-    
-    private func requestReset() {
-        guard !email.isEmpty else {
-            errorMessage = "Please enter your email address."
-            return
-        }
-        
-        Auth.auth().sendPasswordReset(withEmail: email) { error in
-            if let error = error {
-                errorMessage = error.localizedDescription
-            } else {
-                errorMessage = "Password reset email sent successfully. Please check your inbox."
-            }
-        }
-    }
+    @EnvironmentObject var authViewModel: AuthViewModel
     
     var body: some View {
         ZStack {
@@ -90,10 +38,7 @@ struct SignInView: View {
                     .frame(maxWidth: .infinity, alignment: .topLeading)
                     .padding()
                 
-                TextField(
-                    "Email Address",
-                    text: $email
-                )
+                TextField("Email Address", text: $authViewModel.signInEmail)
                 .frame(width: 340)
                 .padding()
                 .background(Color.white)
@@ -107,10 +52,7 @@ struct SignInView: View {
                 .disableAutocorrection(true)
                 .keyboardType(.default)
                 
-                SecureField(
-                    "Password",
-                    text: $password
-                )
+                SecureField("Password", text: $authViewModel.signInPassword)
                 .frame(width: 340)
                 .padding()
                 .background(Color.white)
@@ -125,7 +67,7 @@ struct SignInView: View {
                 .keyboardType(.default)
                 
                 
-                Button(action: authenticate) {
+                Button(action: authViewModel.signIn) {
                     Label("Log In", systemImage: "arrow.right")
                         .frame(width: 340)
                 }
@@ -134,20 +76,19 @@ struct SignInView: View {
                 .foregroundStyle(Color.white)
                 .cornerRadius(20)
                 
-                Button(action: requestReset) {
+                Button(action: authViewModel.resetPassword) {
                     Text("Forgot Password?")
                         .foregroundColor(.blue)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
                 }
                 
-                if let errorMessage = errorMessage {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
-                        .padding(.top, 10)
-                        .multilineTextAlignment(.center)
+                if authViewModel.errorMessage != nil {
+                    Text(authViewModel.errorMessage!)
+                            .foregroundColor(.red)
+                            .padding(.top, 10)
+                            .multilineTextAlignment(.center)
                 }
-                
             }
             .padding()
         }
@@ -156,6 +97,7 @@ struct SignInView: View {
 
 #Preview {
     SignInView()
+        .environmentObject(AuthViewModel())
 }
 
 
