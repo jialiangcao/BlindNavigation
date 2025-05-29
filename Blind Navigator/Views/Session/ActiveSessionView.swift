@@ -34,8 +34,15 @@ struct ActiveSessionView: View {
                     }
                 }
             }
+            
             Tab("Predictions", systemImage: "waveform.path") {
-                Text("Prediction: Accuracy:")
+                Text("Prediction: ")
+                if let accuracy = sessionViewModel.locationAccuracy {
+                    Text("Accuracy: \(accuracy)")
+                } else {
+                    Text("Accuracy: --")
+                }
+                Button("End session", action: endSession)
             }
         }
     }
