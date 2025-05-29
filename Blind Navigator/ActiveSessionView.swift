@@ -9,11 +9,30 @@ import MapKit
 
 struct ActiveSessionView: View {
     @ObservedObject var sessionManager: SessionManager
+    let endSession: () -> Void
+    
+    @State private var cameraPosition = MapCameraPosition.region(
+        MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060), // Default to NYC
+            span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
+        )
+    )
     
     var body: some View {
         TabView {
             Tab("Maps", systemImage: "map.fill") {
-                Map {}
+                Map(position: $cameraPosition, interactionModes: .all) {
+                    UserAnnotation()
+                }
+                .onReceive(sessionManager.$userLocation) { location in
+                    if let loc = location {
+                        let region = MKCoordinateRegion(
+                            center: loc,
+                            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                        )
+                        cameraPosition = .region(region)
+                    }
+                }
             }
             Tab("Predictions", systemImage: "waveform.path") {
                 Text("Prediction: Accuracy:")
@@ -23,5 +42,5 @@ struct ActiveSessionView: View {
 }
 
 #Preview {
-    ActiveSessionView(sessionManager: SessionManager())
+    ActiveSessionView(sessionManager: SessionManager(), endSession: {})
 }

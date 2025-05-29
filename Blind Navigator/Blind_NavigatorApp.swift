@@ -14,17 +14,22 @@ struct Blind_NavigatorApp: App {
     // Firebase
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var authStore = AuthStore()
-    @StateObject private var sessionManager = SessionManager()
+    @State private var isSessionActive = false
    
     var body: some Scene {
         WindowGroup {
             if authStore.user == nil {
                 LoginPage()
             } else {
-                if sessionManager.isSessionActive {
-                    ActiveSessionView(sessionManager: sessionManager)
+                // Passes in function closures to trigger session state within a child view
+                if isSessionActive {
+                    ActiveSessionView(sessionManager: SessionManager(),
+                                      endSession: { isSessionActive = false }
+                    )
                 } else {
-                    StartSessionView(sessionManager: sessionManager)
+                    StartSessionView(startSession: {
+                        isSessionActive = true
+                    })
                 }
             }
         }

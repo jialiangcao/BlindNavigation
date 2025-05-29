@@ -8,7 +8,7 @@ import SwiftUI
 import FirebaseAuth
 
 struct StartSessionView: View {
-    @ObservedObject var sessionManager: SessionManager
+    let startSession: () -> Void
     
     private func signOut() {
         do {
@@ -20,7 +20,7 @@ struct StartSessionView: View {
     
     var body: some View {
         Text("Ready to start a new session?")
-        Button("Start Session") {}
+        Button("Start Session", action: startSession)
         
         Button(action: signOut) {
             Text("Sign Out")
@@ -29,5 +29,5 @@ struct StartSessionView: View {
 }
 
 #Preview {
-    StartSessionView(sessionManager: SessionManager())
+    StartSessionView(startSession: {})
 }
