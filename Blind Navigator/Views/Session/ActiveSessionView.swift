@@ -37,11 +37,19 @@ struct ActiveSessionView: View {
             
             Tab("Predictions", systemImage: "waveform.path") {
                 Text("Prediction: ")
+                
                 if let accuracy = sessionViewModel.locationAccuracy {
                     Text("Accuracy: \(accuracy)")
                 } else {
                     Text("Accuracy: --")
                 }
+                
+                if let decibels = sessionViewModel.decibelLevel {
+                    Text("Decibels: \(decibels)")
+                } else {
+                    Text("Decibels: --")
+                }
+                
                 Button("End session", action: endSession)
             }
         }
