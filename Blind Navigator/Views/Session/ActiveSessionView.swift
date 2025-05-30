@@ -36,7 +36,11 @@ struct ActiveSessionView: View {
             }
             
             Tab("Predictions", systemImage: "waveform.path") {
-                Text("Prediction: ")
+                if let prediction = sessionViewModel.prediction {
+                    Text("Prediction: \(prediction)")
+                } else {
+                    Text("Prediction: --")
+                }
                 
                 if let accuracy = sessionViewModel.locationAccuracy {
                     Text("Accuracy: \(accuracy)")

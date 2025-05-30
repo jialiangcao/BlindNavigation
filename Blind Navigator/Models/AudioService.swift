@@ -7,6 +7,8 @@
 
 // Fix placeholder functions after implementing MLPredictor
 import AVFoundation
+import Compression
+import zlib
 
 protocol AudioServiceDelegate: AnyObject {
     func didProcessAudio(_ spectrogram: [[[Double]]])
@@ -106,14 +108,15 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
         buffer.removeAll()
         let dataToDouble = dataToSend.map { Double($0) }
         //let compressedData = NSData(bytes: dataToDouble, length: dataToSend.count * MemoryLayout<Double>.size).gzipped()
-        //postAudio(compressedData!)
+        let compressedData = dataToDouble.withUnsafeBytes { Data($0) }
+        postAudio(compressedData)
     }
     
     private func postAudio (_ compressedData: Data) {
-        var request = URLRequest(url: Constants.apiURL!)
+        var request = URLRequest(url: Constants.localURL!)
         request.httpMethod = "POST"
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
-        request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
+        //request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
         request.httpBody = compressedData
         
         let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
