@@ -5,10 +5,7 @@
 //  Created by Jialiang Cao on 5/29/25.
 //
 
-// Fix placeholder functions after implementing MLPredictor
 import AVFoundation
-import Compression
-import zlib
 
 protocol AudioServiceDelegate: AnyObject {
     func didProcessAudio(_ spectrogram: [[[Double]]])
@@ -20,7 +17,8 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     private var engine: AVAudioEngine?
     private var recorder: AVAudioRecorder?
     private var buffer: [Float] = []
-    
+    private let requiredSize = Int(Constants.audioConfig.duration * Double(Constants.audioConfig.sampleRate))
+
     func startRecording() {
         setupAudioSession()
         setupRecorder()
@@ -101,23 +99,20 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     }
     
     private func checkBuffer() {
-        let requiredSize = Int(Constants.audioConfig.duration * Double(Constants.audioConfig.sampleRate))
         guard buffer.count >= requiredSize else { return }
         
         let dataToSend = Array(buffer.suffix(requiredSize))
         buffer.removeAll()
         let dataToDouble = dataToSend.map { Double($0) }
-        //let compressedData = NSData(bytes: dataToDouble, length: dataToSend.count * MemoryLayout<Double>.size).gzipped()
-        let compressedData = dataToDouble.withUnsafeBytes { Data($0) }
-        postAudio(compressedData)
+        let bufferMemory = dataToDouble.withUnsafeBytes { Data($0) }
+        postAudio(bufferMemory)
     }
     
-    private func postAudio (_ compressedData: Data) {
+    private func postAudio (_ bufferData: Data) {
         var request = URLRequest(url: Constants.localURL!)
         request.httpMethod = "POST"
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
-        //request.setValue("gzip", forHTTPHeaderField: "Content-Encoding")
-        request.httpBody = compressedData
+        request.httpBody = bufferData
         
         let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             guard let self = self else {
