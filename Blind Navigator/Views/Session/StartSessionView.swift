@@ -8,6 +8,33 @@ import SwiftUI
 import FirebaseAuth
 
 struct StartSessionView: View {
+    // MARK: - Settings
+    @State private var showingSettings = false
+    @AppStorage("preferPredictions") private var preferPredictions = false
+    
+    private var settingsSections: [SettingsSection] {
+            [
+                SettingsSection(title: "Session", items: [
+                    SettingItem(
+                        title: "Predictions (Requires data)",
+                        iconName: "waveform",
+                        iconColor: .blue,
+                        type: .toggle($preferPredictions)
+                    )
+                ]),
+                SettingsSection(title: "Account", items: [
+                    SettingItem(
+                        title: "Sign out",
+                        iconName: "rectangle.portrait.and.arrow.right",
+                        iconColor: .red,
+                        type: .action(signOut)
+                    )
+                ]),
+
+            ]
+        }
+    
+    // For navigation
     let startSession: () -> Void
     
     private func signOut() {
@@ -18,7 +45,6 @@ struct StartSessionView: View {
         }
     }
     
-    // Placeholder UI until more features are specified
     var body: some View {
         ZStack {
             LinearGradient(
@@ -39,6 +65,26 @@ struct StartSessionView: View {
             .blendMode(.overlay)
             .edgesIgnoringSafeArea(.all)
             
+            VStack(alignment: .leading) {
+                Button(action: { showingSettings.toggle() }) {
+                    Image(systemName: "gear")
+                }
+                .padding(13)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.gray, lineWidth: 1).fill(Color.white))
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .sheet(isPresented: $showingSettings) {
+                    SettingsView(sections: settingsSections)
+                        .presentationDetents([.medium, .large])
+                }
+                .buttonStyle(ScaleButtonStyle())
+
+                
+                Spacer()
+            }
+            .padding()
+            
             VStack {
                 Text("Start Session")
                     .fontWeight(.bold)
@@ -53,10 +99,7 @@ struct StartSessionView: View {
                     .background(Color.mint)
                     .foregroundStyle(Color.white)
                     .cornerRadius(20)
-                
-                Button(action: signOut) {
-                    Text("Sign Out")
-                }
+                    .buttonStyle(ScaleButtonStyle())
             }
         }
     }

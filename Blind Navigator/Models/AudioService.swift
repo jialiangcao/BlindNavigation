@@ -19,6 +19,8 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     private var buffer: [Float] = []
     private let requiredSize = Int(Constants.audioConfig.duration * Double(Constants.audioConfig.sampleRate))
     
+    private let preferPredictions = UserDefaults.standard.bool(forKey: "preferPredictions")
+    
     // For API tokens
     weak var authViewModel: AuthViewModel?
     init(authViewModel: AuthViewModel) {
@@ -84,6 +86,10 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     }
     
     private func setupEngine() {
+        if (!preferPredictions) {
+            return
+        }
+        
         engine = AVAudioEngine()
         let inputNode = engine?.inputNode
         let format = inputNode?.inputFormat(forBus: 0)
