@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-private struct StatisticCard: View {
+public struct StatisticCard: View {
         let title: String
         let value: String
         let icon: String
         
-        var body: some View {
+        public var body: some View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.title3)
@@ -50,5 +50,4 @@ private struct StatisticCard: View {
             value: "42",
             icon: "heart.fill"
         )
-        .padding()
 }
