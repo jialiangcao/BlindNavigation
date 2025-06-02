@@ -64,15 +64,16 @@ struct ActiveSessionView: View {
                         )
                         
                         StatisticCard(
-                            title: "GPS Accuracy",
-                            value: "\(sessionViewModel.locationAccuracy ?? 0) meters",
-                            icon: "location.fill"
+                            title: "Decibels",
+                            // Syntax necessary to avoid type inference error
+                            value: sessionViewModel.decibelLevel.map { "\($0)"} ?? "Disabled",
+                            icon: "speaker.wave.2.fill"
                         )
                         
                         StatisticCard(
-                            title: "Decibels",
-                            value: "\(sessionViewModel.decibelLevel ?? 0)",
-                            icon: "speaker.wave.2.fill"
+                            title: "GPS Accuracy",
+                            value: "\(sessionViewModel.locationAccuracy ?? 0) meters",
+                            icon: "location.fill"
                         )
                     }
                     .padding(20)
@@ -114,16 +115,7 @@ struct ActiveSessionView: View {
             UITabBar.appearance().scrollEdgeAppearance = appearance
         }
     }
-
-    // MARK: - Button Animation
-    private struct ScaleButtonStyle: ButtonStyle {
-        func makeBody(configuration: Configuration) -> some View {
-            configuration.label
-                .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
-                .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
-        }
-    }
-    }
+}
 
 
 #Preview {
