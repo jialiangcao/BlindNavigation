@@ -18,6 +18,12 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     private var recorder: AVAudioRecorder?
     private var buffer: [Float] = []
     private let requiredSize = Int(Constants.audioConfig.duration * Double(Constants.audioConfig.sampleRate))
+    
+    // For API tokens
+    weak var authViewModel: AuthViewModel?
+    init(authViewModel: AuthViewModel) {
+        self.authViewModel = authViewModel
+    }
 
     func startRecording() {
         setupAudioSession()
@@ -109,9 +115,16 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     }
     
     private func postAudio (_ bufferData: Data) {
+        guard let idToken = authViewModel?.idToken else {
+            print("No token available")
+            return
+        }
+        
         var request = URLRequest(url: Constants.localURL!)
         request.httpMethod = "POST"
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+        print(idToken)
         request.httpBody = bufferData
         
         let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in

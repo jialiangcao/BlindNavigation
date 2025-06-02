@@ -14,11 +14,17 @@ final class SessionViewModel: NSObject, ObservableObject {
     @Published var decibelLevel: Float?
     @Published var prediction: String?
     
-    private let locationService = LocationService()
-    private let audioService = AudioService()
-    private let predictionService = PredictionService()
+    private let authVM: AuthViewModel
+    private let locationService: LocationService
+    private let audioService: AudioService
+    private let predictionService: PredictionService
     
     override init() {
+        self.authVM = AuthViewModel()
+        self.locationService = LocationService()
+        self.audioService = AudioService(authViewModel: authVM)
+        self.predictionService = PredictionService()
+        
         super.init()
         locationService.delegate = self
         audioService.delegate = self

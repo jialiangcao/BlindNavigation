@@ -14,6 +14,7 @@ import Combine
 final class AuthViewModel: ObservableObject {
     // MARK: - Global auth state
     @Published var user: FirebaseAuth.User? // nil if signed out
+    @Published var idToken: String?
     @Published var errorMessage: String?
     @Published var isLoading = false
     
@@ -32,6 +33,9 @@ final class AuthViewModel: ObservableObject {
     init() {
         authHandle = Auth.auth().addStateDidChangeListener { _, user in
             self.user = user
+            user?.getIDToken { idToken, error in
+            self.idToken = idToken
+            }
         }
     }
     
