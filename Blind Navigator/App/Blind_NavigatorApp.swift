@@ -25,6 +25,7 @@ struct Blind_NavigatorApp: App {
             } else {
                 // Passes in function closures to trigger session state within a child view
                 if isSessionActive {
+                    StopwatchView()
                     ActiveSessionView(sessionViewModel: SessionViewModel(),
                                       endSession: { isSessionActive = false }
                     )
