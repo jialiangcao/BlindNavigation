@@ -65,8 +65,8 @@ class StorageService: StorageServiceProtocol {
         }
         
         uploadTask.observe(.progress) { snapshot in
+            // Currently unused
             let percent = 100.0 * Double(snapshot.progress?.completedUnitCount ?? 0) / Double(snapshot.progress?.totalUnitCount ?? 1)
-            print("Upload progress: \(percent)%")
         }
     }
 }
