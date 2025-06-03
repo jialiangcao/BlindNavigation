@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyAvW6QMuWZBilex7wFQx4xequwsLuXV3RA</string>
+	<string>AIzaSyCaOWDnkqQWyAj4ihSuPkt8erGvvu5icXo</string>
 	<key>GCM_SENDER_ID</key>
-	<string>1026187812034</string>
+	<string>78709434455</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>jcao.Blind-Navigator</string>
+	<string>com.cuny.sidewalk.localversion</string>
 	<key>PROJECT_ID</key>
-	<string>blind-navigation-7cb2f</string>
+	<string>nsf-2131186-18936</string>
 	<key>STORAGE_BUCKET</key>
-	<string>blind-navigation-7cb2f.firebasestorage.app</string>
+	<string>nsf-2131186-18936.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:1026187812034:ios:e684fd2d22f5b88b7caf5b</string>
+	<string>1:78709434455:ios:1508cb6b52d0a792cfdb12</string>
 </dict>
 </plist>
