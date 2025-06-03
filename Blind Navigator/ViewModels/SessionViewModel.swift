@@ -40,6 +40,11 @@ final class SessionViewModel: NSObject, ObservableObject {
         locationService.delegate = self
         audioService.delegate = self
         predictionService.delegate = self
+        startSession()
+    }
+    
+    deinit {
+        stopSession()
     }
     
     func startSession() {
@@ -47,7 +52,9 @@ final class SessionViewModel: NSObject, ObservableObject {
         do {
             // CSV headers: timestamp, elapsed, latitude, longitude, prediction
             let headers = "timestamp,elapsed,latitude,longitude,prediction\n"
-            fileURL = try storageService.createCSVFile(sessionId: "session_\(Int(sessionStartTime))", headers: headers)
+            let date = Date()
+            let now = formatter.string(from: date)
+            fileURL = try storageService.createCSVFile(sessionId: "\(now)", headers: headers)
         } catch {
             print("Failed to create CSV file: \(error)")
         }
@@ -91,7 +98,12 @@ final class SessionViewModel: NSObject, ObservableObject {
             completion(.failure(NSError(domain: "No file to upload", code: 0)))
             return
         }
-        let remotePath = "sessions/\(fileURL.lastPathComponent)"
+        guard let email = authVM.getUserEmail() else {
+            print("No email")
+            return
+        }
+        
+        let remotePath = "BlindNavigator/sessions/\(email)/\(fileURL.lastPathComponent)"
         storageService.uploadFile(localFileURL: fileURL, remotePath: remotePath) { result in
             DispatchQueue.main.async {
                 completion(result)
