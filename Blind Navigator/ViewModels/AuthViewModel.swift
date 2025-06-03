@@ -108,4 +108,8 @@ final class AuthViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
     }
+    
+    func getUserEmail() -> String? {
+        return Auth.auth().currentUser?.email
+    }
 }
