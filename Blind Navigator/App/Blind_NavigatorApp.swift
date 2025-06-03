@@ -13,30 +13,20 @@ import FirebaseAuth
 struct Blind_NavigatorApp: App {
     // Firebase
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    @StateObject private var authViewModel = AuthViewModel()
     
-    @State var isSessionActive = false
-   
+    @StateObject private var authViewModel = AuthViewModel()
+    @StateObject private var navigationViewModel = NavigationViewModel()
+    
     var body: some Scene {
         WindowGroup {
-            if authViewModel.user == nil {
-                AuthView()
-                    .environmentObject(authViewModel)
-            } else {
-                // Passes in function closures to trigger session state within a child view
-                if isSessionActive {
-                    StopwatchView()
-                    ActiveSessionView(sessionViewModel: SessionViewModel(),
-                    endSession: {
-                        isSessionActive = false
-                    })
-                } else {
-                    StartSessionView(
-                    startSession: {
-                        isSessionActive = true
-                    })
+            RootView()
+                .environmentObject(authViewModel)
+                .environmentObject(navigationViewModel)
+                .onAppear {
+                    if authViewModel.user != nil {
+                        navigationViewModel.signedIn()
+                    }
                 }
-            }
         }
     }
 }

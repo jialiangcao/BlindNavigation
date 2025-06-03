@@ -10,6 +10,7 @@ import FirebaseAuth
 
 struct SignInView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var navigationViewModel: NavigationViewModel
     
     var body: some View {
         ZStack {
@@ -67,7 +68,13 @@ struct SignInView: View {
                 .keyboardType(.default)
                 
                 
-                Button(action: authViewModel.signIn) {
+                Button(action: { authViewModel.signIn { success in
+                        if success {
+                            navigationViewModel.signedIn()
+                        }
+                    }
+                }
+                ) {
                     Label("Log In", systemImage: "arrow.right")
                         .frame(width: 340)
                 }

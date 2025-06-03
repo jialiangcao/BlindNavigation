@@ -46,7 +46,7 @@ final class AuthViewModel: ObservableObject {
     }
     
     // MARK: - Auth functions
-    func signIn() {
+    func signIn(completion: @escaping (Bool) -> Void) {
         errorMessage = nil
         guard !signInEmail.isEmpty, !signInPassword.isEmpty else {
             errorMessage = "Email and password cannot be blank."
@@ -58,6 +58,9 @@ final class AuthViewModel: ObservableObject {
                 self?.isLoading = false
                 if let err = err {
                     self?.errorMessage = err.localizedDescription
+                    completion(false)
+                } else {
+                    completion(true)
                 }
             }
         }
