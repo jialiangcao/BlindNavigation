@@ -14,6 +14,7 @@ struct Blind_NavigatorApp: App {
     // Firebase
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var authViewModel = AuthViewModel()
+    @StateObject private var sessionViewModel = SessionViewModel()
     
     @State var isSessionActive = false
    
@@ -26,11 +27,14 @@ struct Blind_NavigatorApp: App {
                 // Passes in function closures to trigger session state within a child view
                 if isSessionActive {
                     StopwatchView()
-                    ActiveSessionView(sessionViewModel: SessionViewModel(),
-                                      endSession: { isSessionActive = false }
-                    )
+                    ActiveSessionView(sessionViewModel: sessionViewModel,
+                    endSession: {
+                        sessionViewModel.stopSession()
+                        isSessionActive = false
+                    })
                 } else {
                     StartSessionView(startSession: {
+                        sessionViewModel.startSession()
                         isSessionActive = true
                     })
                 }

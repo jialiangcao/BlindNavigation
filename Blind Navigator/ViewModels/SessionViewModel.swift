@@ -22,6 +22,7 @@ final class SessionViewModel: NSObject, ObservableObject {
     
     private var fileURL: URL?
     private var sessionStartTime: TimeInterval = 0
+    let formatter: DateFormatter
     
     override init() {
         self.authVM = AuthViewModel()
@@ -30,19 +31,22 @@ final class SessionViewModel: NSObject, ObservableObject {
         self.predictionService = PredictionService()
         self.storageService = StorageService()
         
+        self.formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSS"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        
         super.init()
         locationService.delegate = self
         audioService.delegate = self
         predictionService.delegate = self
-        startSession()
     }
     
     func startSession() {
         sessionStartTime = Date().timeIntervalSince1970
-        
         do {
             // CSV headers: timestamp, elapsed, latitude, longitude, prediction
-            let headers = "timestamp,elapsed,latitude,longitude,decibel,prediction\n"
+            let headers = "timestamp,elapsed,latitude,longitude,prediction\n"
             fileURL = try storageService.createCSVFile(sessionId: "session_\(Int(sessionStartTime))", headers: headers)
         } catch {
             print("Failed to create CSV file: \(error)")
@@ -63,13 +67,15 @@ final class SessionViewModel: NSObject, ObservableObject {
             guard let fileURL = fileURL, let userLocation = userLocation else {
                 return
             }
-            let now = Date().timeIntervalSince1970
-            let elapsed = now - sessionStartTime
+        
+            let date = Date()
+            let now = formatter.string(from: date)
+            let elapsed = Date().timeIntervalSince1970 - sessionStartTime
         
             let latitude = userLocation.latitude
             let longitude = userLocation.longitude
             
-            let predictionStr = prediction ?? ""
+            let predictionStr = prediction ?? "Disabled"
             
             let row = "\(now),\(elapsed),\(latitude),\(longitude),\(predictionStr)\n"
             
@@ -80,7 +86,7 @@ final class SessionViewModel: NSObject, ObservableObject {
             }
     }
     
-    func uploadSession(completion: @escaping (Result<URL, Error>) -> Void) {
+    private func uploadSession(completion: @escaping (Result<URL, Error>) -> Void) {
         guard let fileURL = fileURL else {
             completion(.failure(NSError(domain: "No file to upload", code: 0)))
             return
