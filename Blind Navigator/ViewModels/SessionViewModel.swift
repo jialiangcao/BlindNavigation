@@ -11,7 +11,7 @@ import CoreLocation
 final class SessionViewModel: NSObject, ObservableObject {
     @Published var userLocation: CLLocationCoordinate2D?
     @Published var locationAccuracy: CLLocationAccuracy?
-    @Published var decibelLevel: Float?
+    @Published var decibelLevel: Int?
     @Published var prediction: String?
     
     private let authVM: AuthViewModel
@@ -59,7 +59,7 @@ extension SessionViewModel: AudioServiceDelegate {
         self.predictionService.processSpectrogram(spectrogram)
     }
         
-    func didUpdateDecibelLevel(_ decibels: Float) {
+    func didUpdateDecibelLevel(_ decibels: Int) {
         DispatchQueue.main.async {
             self.decibelLevel = decibels
         }

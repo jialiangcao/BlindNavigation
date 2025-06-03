@@ -9,7 +9,7 @@ import AVFoundation
 
 protocol AudioServiceDelegate: AnyObject {
     func didProcessAudio(_ spectrogram: [[[Double]]])
-    func didUpdateDecibelLevel(_ decibels: Float)
+    func didUpdateDecibelLevel(_ decibels: Int)
 }
 
 class AudioService: NSObject, AVAudioRecorderDelegate {
@@ -18,6 +18,7 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     private var recorder: AVAudioRecorder?
     private var buffer: [Float] = []
     private let requiredSize = Int(Constants.audioConfig.duration * Double(Constants.audioConfig.sampleRate))
+    private var lastUpdateTime = 0.0
     
     private let preferPredictions = UserDefaults.standard.bool(forKey: "preferPredictions")
     
@@ -86,15 +87,10 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     }
     
     private func setupEngine() {
-        if (!preferPredictions) {
-            return
-        }
-        
         engine = AVAudioEngine()
         let inputNode = engine?.inputNode
         let format = inputNode?.inputFormat(forBus: 0)
         
-        // Testing higher buffer size, was on 1024 before
         inputNode?.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
             self?.processBuffer(buffer)
         }
@@ -107,11 +103,18 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
         let newData = Array(UnsafeBufferPointer(start: channelData, count: Int(buffer.frameLength)))
         self.buffer += newData
         checkBuffer()
-        updateDecibelLevel(data: newData)
+        
+        // Timer because CPU intensive
+        let currentTime = Date().timeIntervalSince1970
+        if currentTime - lastUpdateTime >= 2.0 {
+            updateDecibelLevel(data: newData)
+            lastUpdateTime = currentTime
+        }
     }
     
+    // Checks and calls processing for API, which returns a prediction string
     private func checkBuffer() {
-        guard buffer.count >= requiredSize else { return }
+        guard buffer.count >= requiredSize && preferPredictions else { return }
         
         let dataToSend = Array(buffer.suffix(requiredSize))
         buffer.removeAll()
@@ -157,6 +160,6 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     private func updateDecibelLevel(data: [Float]) {
         let rms = sqrt(data.reduce(0) { $0 + pow($1, 2)} / Float(data.count))
         let decibels = 20 * log10(rms / 0.00002)
-        delegate?.didUpdateDecibelLevel(decibels.rounded())
+        delegate?.didUpdateDecibelLevel(Int(decibels))
     }
 }
