@@ -18,12 +18,17 @@ final class SessionViewModel: NSObject, ObservableObject {
     private let locationService: LocationService
     private let audioService: AudioService
     private let predictionService: PredictionService
+    private let storageService: StorageService
+    
+    private var fileURL: URL?
+    private var sessionStartTime: TimeInterval = 0
     
     override init() {
         self.authVM = AuthViewModel()
         self.locationService = LocationService()
         self.audioService = AudioService(authViewModel: authVM)
         self.predictionService = PredictionService()
+        self.storageService = StorageService()
         
         super.init()
         locationService.delegate = self
@@ -32,11 +37,17 @@ final class SessionViewModel: NSObject, ObservableObject {
         startSession()
     }
     
-    deinit {
-        stopSession()
-    }
-    
     func startSession() {
+        sessionStartTime = Date().timeIntervalSince1970
+        
+        do {
+            // CSV headers: timestamp, elapsed, latitude, longitude, prediction
+            let headers = "timestamp,elapsed,latitude,longitude,decibel,prediction\n"
+            fileURL = try storageService.createCSVFile(sessionId: "session_\(Int(sessionStartTime))", headers: headers)
+        } catch {
+            print("Failed to create CSV file: \(error)")
+        }
+        
         locationService.startUpdating()
         audioService.startRecording()
     }
@@ -44,6 +55,42 @@ final class SessionViewModel: NSObject, ObservableObject {
     func stopSession() {
         locationService.stopUpdating()
         audioService.stopRecording()
+        storageService.closeFile()
+        uploadSession { _ in }
+    }
+    
+    private func logCurrentData() {
+            guard let fileURL = fileURL, let userLocation = userLocation else {
+                return
+            }
+            let now = Date().timeIntervalSince1970
+            let elapsed = now - sessionStartTime
+        
+            let latitude = userLocation.latitude
+            let longitude = userLocation.longitude
+            
+            let predictionStr = prediction ?? ""
+            
+            let row = "\(now),\(elapsed),\(latitude),\(longitude),\(predictionStr)\n"
+            
+            do {
+                try storageService.append(row: row, to: fileURL)
+            } catch {
+                print("Failed to append row to CSV: \(error)")
+            }
+    }
+    
+    func uploadSession(completion: @escaping (Result<URL, Error>) -> Void) {
+        guard let fileURL = fileURL else {
+            completion(.failure(NSError(domain: "No file to upload", code: 0)))
+            return
+        }
+        let remotePath = "sessions/\(fileURL.lastPathComponent)"
+        storageService.uploadFile(localFileURL: fileURL, remotePath: remotePath) { result in
+            DispatchQueue.main.async {
+                completion(result)
+            }
+        }
     }
 }
 
@@ -51,6 +98,7 @@ extension SessionViewModel: LocationServiceDelegate {
     func didUpdateLocation(_ location: CLLocation, accuracy: CLLocationAccuracy) {
         userLocation = location.coordinate
         locationAccuracy = accuracy
+        self.logCurrentData()
     }
 }
 
