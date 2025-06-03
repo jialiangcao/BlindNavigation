@@ -13,10 +13,13 @@ protocol StorageServiceProtocol {
     func append(row: String, to fileURL: URL) throws
     func closeFile()
     func uploadFile(localFileURL: URL, remotePath: String, completion: @escaping (Result<URL, Error>) -> Void)
+    func saveToLocalHistory(fileURL: URL)
+    func fetchLocalHistory() -> [URL]
 }
 
 class StorageService: StorageServiceProtocol {
     private var fileHandle: FileHandle?
+    private let historyKey = "sessionFileHistory"
     
     func createCSVFile(sessionId: String, headers: String) throws -> URL {
         let fileManager = FileManager.default
@@ -68,5 +71,18 @@ class StorageService: StorageServiceProtocol {
             // Currently unused
             let percent = 100.0 * Double(snapshot.progress?.completedUnitCount ?? 0) / Double(snapshot.progress?.totalUnitCount ?? 1)
         }
+    }
+    
+    func saveToLocalHistory(fileURL: URL) {
+        print("saving local")
+        var savedPaths = UserDefaults.standard.stringArray(forKey: historyKey) ?? []
+        savedPaths.append(fileURL.path)
+        UserDefaults.standard.set(savedPaths, forKey: historyKey)
+    }
+
+    func fetchLocalHistory() -> [URL] {
+        print("fetching")
+        let savedPaths = UserDefaults.standard.stringArray(forKey: historyKey) ?? []
+        return savedPaths.compactMap { URL(fileURLWithPath: $0) }
     }
 }

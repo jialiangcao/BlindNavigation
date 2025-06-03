@@ -68,6 +68,7 @@ final class SessionViewModel: NSObject, ObservableObject {
         audioService.stopRecording()
         storageService.closeFile()
         uploadSession { _ in }
+        storageService.saveToLocalHistory(fileURL: fileURL!)
     }
     
     private func logCurrentData() {
