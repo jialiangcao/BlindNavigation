@@ -9,6 +9,9 @@ import Foundation
 
 class HistoryViewModel: ObservableObject {
     @Published var history: [URL] = []
+    @Published var selectedFiles: Set<URL> = []
+    @Published var uploadStatus: Bool?
+    
     private let storageService: StorageServiceProtocol
     private let authVM: AuthViewModel
 
@@ -22,21 +25,48 @@ class HistoryViewModel: ObservableObject {
         history = storageService.fetchLocalHistory()
     }
     
-    public func delete() {
-        storageService.clearData()
+    public func deleteSelectedFiles() {
+        for url in selectedFiles {
+            storageService.deleteFile(localFileURL: url)
+        }
+        selectedFiles = []
         loadHistory()
     }
     
-    public func upload() {
+    public func uploadSelectedFiles() {
         guard let email = authVM.getUserEmail() else {
             print("No email")
             return
         }
+        
+        guard !selectedFiles.isEmpty else {
+            print("No files selected")
+            return
+        }
+        
+        let dispatchGroup = DispatchGroup()
+        var uploadFailed = false
 
-        for url in history {
+        for url in selectedFiles {
+            dispatchGroup.enter()
             let remotePath = "BlindNavigator/\(email)/sessions/\(url.lastPathComponent)"
             storageService.uploadFile(localFileURL: url, remotePath: remotePath) { result in
-                print(result)
+                switch result {
+                case .failure(_):
+                    uploadFailed = true
+                case .success(let result):
+                    print(result)
+                }
+                dispatchGroup.leave()
+            }
+        }
+        
+        dispatchGroup.notify(queue: .main) {
+            self.deleteSelectedFiles()
+            if uploadFailed {
+                self.uploadStatus = false
+            } else {
+                self.uploadStatus = true
             }
         }
     }
