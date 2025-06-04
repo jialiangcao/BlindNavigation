@@ -104,7 +104,7 @@ final class SessionViewModel: NSObject, ObservableObject {
             return
         }
         
-        let remotePath = "BlindNavigator/sessions/\(email)/\(fileURL.lastPathComponent)"
+        let remotePath = "BlindNavigator/\(email)/sessions/\(fileURL.lastPathComponent)"
         storageService.uploadFile(localFileURL: fileURL, remotePath: remotePath) { result in
             DispatchQueue.main.async {
                 completion(result)

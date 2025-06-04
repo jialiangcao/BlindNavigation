@@ -16,11 +16,11 @@ struct RootView: View {
         case .auth:
             AuthView()
         case .startSession:
-            StopwatchView()
             StartSessionView(startSession: {
                 navViewModel.startSession()
             })
         case .activeSession:
+            StopwatchView()
             ActiveSessionView(
                 sessionViewModel: SessionViewModel(),
                 endSession: {
@@ -29,4 +29,3 @@ struct RootView: View {
         }
     }
 }
-
