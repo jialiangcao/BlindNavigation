@@ -8,8 +8,11 @@ import SwiftUI
 import FirebaseAuth
 
 struct StartSessionView: View {
+    @EnvironmentObject private var navigationViewModel: NavigationViewModel
+    
     // MARK: - Settings
     @State private var showingSettings = false
+    @State private var showingHistory = false
     @AppStorage("preferPredictions") private var preferPredictions = false
     
     private var settingsSections: [SettingsSection] {
@@ -40,6 +43,7 @@ struct StartSessionView: View {
     private func signOut() {
         do {
             try Auth.auth().signOut()
+            navigationViewModel.signedOut()
         } catch let signOutError as NSError {
             print("Error signing out: \(signOutError)")
         }
@@ -79,7 +83,20 @@ struct StartSessionView: View {
                         .presentationDetents([.medium, .large])
                 }
                 .buttonStyle(ScaleButtonStyle())
-
+                
+                Button(action: { showingHistory.toggle() }) {
+                    Image(systemName: "calendar")
+                }
+                .padding(13)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.gray, lineWidth: 1).fill(Color.white))
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .sheet(isPresented: $showingHistory) {
+                    HistoryView(historyViewModel: HistoryViewModel())
+                        .presentationDetents([.medium, .large])
+                }
+                .buttonStyle(ScaleButtonStyle())
                 
                 Spacer()
             }
@@ -107,4 +124,5 @@ struct StartSessionView: View {
 
 #Preview {
     StartSessionView(startSession: {})
+        .environmentObject(NavigationViewModel())
 }

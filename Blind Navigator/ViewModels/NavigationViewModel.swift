@@ -12,7 +12,6 @@ enum AppScreen {
     case auth
     case startSession
     case activeSession
-    case history
 }
 class NavigationViewModel: ObservableObject {
     @Published var currentScreen: AppScreen = .auth
@@ -31,9 +30,5 @@ class NavigationViewModel: ObservableObject {
 
     func signedOut() {
         currentScreen = .auth
-    }
-    
-    func showHistory() {
-        currentScreen = .history
     }
 }

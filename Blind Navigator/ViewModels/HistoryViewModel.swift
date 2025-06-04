@@ -12,14 +12,11 @@ class HistoryViewModel: ObservableObject {
     private let storageService: StorageServiceProtocol
 
     init(storageService: StorageServiceProtocol = StorageService()) {
-        print("init history model")
         self.storageService = storageService
         loadHistory()
     }
 
     public func loadHistory() {
         history = storageService.fetchLocalHistory()
-        print(history)
-        print("loading history")
     }
 }

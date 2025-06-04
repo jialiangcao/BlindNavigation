@@ -10,15 +10,11 @@ import SwiftUI
 struct HistoryView: View {
     @ObservedObject var historyViewModel: HistoryViewModel
     
-    func viewHistory() {
-        historyViewModel.loadHistory()
-    }
-    
     var body: some View {
         VStack {
-            Button(action: viewHistory) {
-                Text("View History")
-            }
+            Text("History")
+                .font(.headline)
+                .padding(.top)
             
             List(historyViewModel.history, id: \.self) { fileURL in
                 Text(fileURL.lastPathComponent)

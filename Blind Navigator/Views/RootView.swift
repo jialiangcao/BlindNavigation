@@ -16,6 +16,7 @@ struct RootView: View {
         case .auth:
             AuthView()
         case .startSession:
+            StopwatchView()
             StartSessionView(startSession: {
                 navViewModel.startSession()
             })
@@ -25,8 +26,6 @@ struct RootView: View {
                 endSession: {
                     navViewModel.endSession()
                 })
-        case .history:
-            HistoryView(historyViewModel: HistoryViewModel())
         }
     }
 }
