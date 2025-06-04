@@ -13,9 +13,9 @@ protocol StorageServiceProtocol {
     func append(row: String, to fileURL: URL) throws
     func closeFile()
     func uploadFile(localFileURL: URL, remotePath: String, completion: @escaping (Result<URL, Error>) -> Void)
-    func saveToLocalHistory(fileURL: URL)
+    func saveFileOnDevice(originalURL: URL)
     func fetchLocalHistory() -> [URL]
-    func clearData()
+    func deleteFile(localFileURL: URL)
 }
 
 class StorageService: StorageServiceProtocol {
@@ -52,7 +52,7 @@ class StorageService: StorageServiceProtocol {
     
     func uploadFile(localFileURL: URL, remotePath: String, completion: @escaping (Result<URL, Error>) -> Void) {
         let storageRef = Storage.storage().reference(withPath: remotePath)
-        let uploadTask = storageRef.putFile(from: localFileURL, metadata: nil) { metadata, error in
+        storageRef.putFile(from: localFileURL, metadata: nil) { metadata, error in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -68,13 +68,13 @@ class StorageService: StorageServiceProtocol {
             }
         }
         
-        uploadTask.observe(.progress) { snapshot in
-            // Currently unused
-            let percent = 100.0 * Double(snapshot.progress?.completedUnitCount ?? 0) / Double(snapshot.progress?.totalUnitCount ?? 1)
-        }
+        // Unused
+        //uploadTask.observe(.progress) { snapshot in
+        //    let percent = 100.0 * Double(snapshot.progress?.completedUnitCount ?? 0) / Double(snapshot.progress?.totalUnitCount ?? 1)
+        //}
     }
     
-    func writeToLocalHistory(originalURL: URL) {
+    func saveFileOnDevice(originalURL: URL) {
         let fileManager = FileManager.default
         let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         let destinationURL = documentsURL.appendingPathComponent(originalURL.lastPathComponent)
@@ -82,44 +82,39 @@ class StorageService: StorageServiceProtocol {
             if !fileManager.fileExists(atPath: destinationURL.path) {
                 try fileManager.copyItem(at: originalURL, to: destinationURL)
             }
-            saveToLocalHistory(fileURL: destinationURL)
+            saveToDefaults(fileURL: destinationURL)
         } catch {
             print("Failed to copy file: \(error)")
         }
     }
     
-    func saveToLocalHistory(fileURL: URL) {
-        print("saving url")
+    private func saveToDefaults(fileURL: URL) {
         var savedPaths = UserDefaults.standard.stringArray(forKey: historyKey) ?? []
         savedPaths.append(fileURL.path)
         UserDefaults.standard.set(savedPaths, forKey: historyKey)
     }
 
     func fetchLocalHistory() -> [URL] {
-        print("fetching")
         let savedPaths = UserDefaults.standard.stringArray(forKey: historyKey) ?? []
         return savedPaths.compactMap { URL(fileURLWithPath: $0) }
     }
     
-    func clearData() {
-        print("clearing")
+    func deleteFile(localFileURL: URL) {
         let fileManager = FileManager.default
-        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-
+        
         do {
-            let files = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil)
-            
-            // Delete only .csv files
-            for file in files where file.pathExtension.lowercased() == "csv" {
-                try fileManager.removeItem(at: file)
-                print("Deleted file: \(file.lastPathComponent)")
+            if fileManager.fileExists(atPath: localFileURL.path) {
+                try fileManager.removeItem(at: localFileURL)
+            } else {
+                print("File does not exist")
             }
         } catch {
-            print("Failed to delete files: \(error)")
+            print("File delete failed, error: \(error)")
         }
-
-        // Remove all keys from UserDefaults
-        UserDefaults.standard.set([], forKey: historyKey)
+        
+        var savedPaths = UserDefaults.standard.stringArray(forKey: historyKey) ?? []
+        savedPaths.removeAll { $0 == localFileURL.path }
+        UserDefaults.standard.set(savedPaths, forKey: historyKey)
     }
 
 }
