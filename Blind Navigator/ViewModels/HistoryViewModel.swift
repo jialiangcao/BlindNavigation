@@ -36,11 +36,13 @@ class HistoryViewModel: ObservableObject {
     public func uploadSelectedFiles() {
         guard let email = authVM.getUserEmail() else {
             print("No email")
+            uploadStatus = false
             return
         }
         
         guard !selectedFiles.isEmpty else {
             print("No files selected")
+            uploadStatus = false
             return
         }
         

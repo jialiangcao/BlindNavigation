@@ -24,6 +24,9 @@ struct ActiveSessionView: View {
             // MARK: - Map Tab
             Map(position: $cameraPosition, interactionModes: .all) {
                 UserAnnotation()
+                
+                MapPolyline(coordinates: sessionViewModel.userPath)
+                    .stroke(Color.mint, lineWidth: 4)
             }
             .mapStyle(.standard(elevation: .realistic))
             .mapControlVisibility(.hidden)

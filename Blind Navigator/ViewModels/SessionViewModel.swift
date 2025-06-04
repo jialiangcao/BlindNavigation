@@ -10,6 +10,7 @@ import CoreLocation
 
 final class SessionViewModel: NSObject, ObservableObject {
     @Published var userLocation: CLLocationCoordinate2D?
+    @Published var userPath: [CLLocationCoordinate2D] = []
     @Published var locationAccuracy: CLLocationAccuracy?
     @Published var decibelLevel: Int?
     @Published var prediction: String?
@@ -98,6 +99,7 @@ final class SessionViewModel: NSObject, ObservableObject {
 extension SessionViewModel: LocationServiceDelegate {
     func didUpdateLocation(_ location: CLLocation, accuracy: CLLocationAccuracy) {
         userLocation = location.coordinate
+        userPath.append(location.coordinate)
         locationAccuracy = accuracy
         self.logCurrentData()
     }
