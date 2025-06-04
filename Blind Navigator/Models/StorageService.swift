@@ -15,6 +15,7 @@ protocol StorageServiceProtocol {
     func uploadFile(localFileURL: URL, remotePath: String, completion: @escaping (Result<URL, Error>) -> Void)
     func saveToLocalHistory(fileURL: URL)
     func fetchLocalHistory() -> [URL]
+    func clearData()
 }
 
 class StorageService: StorageServiceProtocol {
@@ -73,8 +74,22 @@ class StorageService: StorageServiceProtocol {
         }
     }
     
+    func writeToLocalHistory(originalURL: URL) {
+        let fileManager = FileManager.default
+        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let destinationURL = documentsURL.appendingPathComponent(originalURL.lastPathComponent)
+        do {
+            if !fileManager.fileExists(atPath: destinationURL.path) {
+                try fileManager.copyItem(at: originalURL, to: destinationURL)
+            }
+            saveToLocalHistory(fileURL: destinationURL)
+        } catch {
+            print("Failed to copy file: \(error)")
+        }
+    }
+    
     func saveToLocalHistory(fileURL: URL) {
-        print("saving local")
+        print("saving url")
         var savedPaths = UserDefaults.standard.stringArray(forKey: historyKey) ?? []
         savedPaths.append(fileURL.path)
         UserDefaults.standard.set(savedPaths, forKey: historyKey)
@@ -85,4 +100,26 @@ class StorageService: StorageServiceProtocol {
         let savedPaths = UserDefaults.standard.stringArray(forKey: historyKey) ?? []
         return savedPaths.compactMap { URL(fileURLWithPath: $0) }
     }
+    
+    func clearData() {
+        print("clearing")
+        let fileManager = FileManager.default
+        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+
+        do {
+            let files = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil)
+            
+            // Delete only .csv files
+            for file in files where file.pathExtension.lowercased() == "csv" {
+                try fileManager.removeItem(at: file)
+                print("Deleted file: \(file.lastPathComponent)")
+            }
+        } catch {
+            print("Failed to delete files: \(error)")
+        }
+
+        // Remove all keys from UserDefaults
+        UserDefaults.standard.set([], forKey: historyKey)
+    }
+
 }

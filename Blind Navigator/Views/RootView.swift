@@ -14,7 +14,11 @@ struct RootView: View {
     var body: some View {
         switch navViewModel.currentScreen {
         case .auth:
-            AuthView()
+            // Testing convenience
+            //AuthView()
+            StartSessionView(startSession: {
+                navViewModel.startSession()
+            })
         case .startSession:
             StartSessionView(startSession: {
                 navViewModel.startSession()

@@ -49,29 +49,29 @@ struct HistoryView: View {
                     }
                     .listStyle(.insetGrouped)
                     .environment(\.editMode, .constant(.active))
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            Button(action: {
-                                if selectedFiles.count == historyViewModel.history.count {
-                                    selectedFiles.removeAll()
-                                } else {
-                                    selectedFiles = Set(historyViewModel.history)
-                                }
-                            }) {
-                                Text(selectedFiles.count == historyViewModel.history.count ? "Deselect All" : "Select All")
-                                    .font(.subheadline)
-                                    .foregroundColor(.blue)
-                            }
-                            .padding(.horizontal)
-                        }
-                    }
+//                    .toolbar {
+//                        ToolbarItem(placement: .navigationBarTrailing) {
+//                            Button(action: {
+//                                if selectedFiles.count == historyViewModel.history.count {
+//                                    selectedFiles.removeAll()
+//                                } else {
+//                                    selectedFiles = Set(historyViewModel.history)
+//                                }
+//                            }) {
+//                                Text(selectedFiles.count == historyViewModel.history.count ? "Deselect All" : "Select All")
+//                                    .font(.subheadline)
+//                                    .foregroundColor(.blue)
+//                            }
+//                            .padding(.horizontal)
+//                        }
+//                    }
                 }
                 
                 Divider()
                 
                 HStack(spacing: 12) {
                     Button(role: .destructive, action: {
-                        // Delete selected action
+                        historyViewModel.delete()
                     }) {
                         Label("Delete", systemImage: "trash")
                             .frame(maxWidth: .infinity)
@@ -80,7 +80,7 @@ struct HistoryView: View {
                     .buttonStyle(.bordered)
                     
                     Button(action: {
-                        // Upload selected action
+                        historyViewModel.upload()
                     }) {
                         Label("Upload", systemImage: "arrow.up.doc")
                             .frame(maxWidth: .infinity)

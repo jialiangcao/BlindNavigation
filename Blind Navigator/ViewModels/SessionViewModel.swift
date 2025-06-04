@@ -67,8 +67,7 @@ final class SessionViewModel: NSObject, ObservableObject {
         locationService.stopUpdating()
         audioService.stopRecording()
         storageService.closeFile()
-        uploadSession { _ in }
-        storageService.saveToLocalHistory(fileURL: fileURL!)
+        storageService.writeToLocalHistory(originalURL: fileURL!)
     }
     
     private func logCurrentData() {
@@ -94,23 +93,6 @@ final class SessionViewModel: NSObject, ObservableObject {
             }
     }
     
-    private func uploadSession(completion: @escaping (Result<URL, Error>) -> Void) {
-        guard let fileURL = fileURL else {
-            completion(.failure(NSError(domain: "No file to upload", code: 0)))
-            return
-        }
-        guard let email = authVM.getUserEmail() else {
-            print("No email")
-            return
-        }
-        
-        let remotePath = "BlindNavigator/\(email)/sessions/\(fileURL.lastPathComponent)"
-        storageService.uploadFile(localFileURL: fileURL, remotePath: remotePath) { result in
-            DispatchQueue.main.async {
-                completion(result)
-            }
-        }
-    }
 }
 
 extension SessionViewModel: LocationServiceDelegate {
