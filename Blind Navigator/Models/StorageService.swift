@@ -55,13 +55,26 @@ class StorageService: StorageServiceProtocol {
         var data: Data?
         do {
             data = try Data(contentsOf: localFileURL)
-        } catch {
+        } catch let error {
             print("Error creating data from file URL")
+            completion(.failure(error))
             return
         }
         
+        // Need to define metadata manually as data is automatically recognized as "application/octet-stream"
+        var fileMetadata: StorageMetadata? = nil
+        if (localFileURL.pathExtension == "m4a") {
+            let metadata = StorageMetadata()
+            metadata.contentType = "audio/m4a"
+            fileMetadata = metadata
+        } else if (localFileURL.pathExtension == "csv") {
+            let metadata = StorageMetadata()
+            metadata.contentType = "text/csv"
+            fileMetadata = metadata
+        }
+        
         // Needs to use putData instead of putFile to avoid iOS reusing the same upload task
-        storageRef.putData(data!, metadata: nil) { metadata, error in
+        storageRef.putData(data!, metadata: fileMetadata) { metadata, error in
             if let error = error {
                 completion(.failure(error))
                 return
