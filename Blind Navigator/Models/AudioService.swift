@@ -19,13 +19,23 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     private var buffer: [Float] = []
     private let requiredSize = Int(Constants.audioConfig.duration * Double(Constants.audioConfig.sampleRate))
     private var lastUpdateTime = 0.0
+    private var formatter: DateFormatter
+    private var audioURL: String
     
     private let preferPredictions = UserDefaults.standard.bool(forKey: "preferPredictions")
     
-    // For API tokens
     weak var authViewModel: AuthViewModel?
-    init(authViewModel: AuthViewModel) {
+    weak var storageService: StorageService?
+    
+    init(authViewModel: AuthViewModel, storageService: StorageService) {
         self.authViewModel = authViewModel
+        self.storageService = storageService
+        
+        self.formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSS"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
+        audioURL = "audio-"+formatter.string(from: Date())
     }
 
     func startRecording() {
@@ -37,6 +47,23 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     func stopRecording() {
         engine?.stop()
         recorder?.stop()
+        
+        guard let originalURL = recorder?.url else {
+              print("No recording url")
+              return
+        }
+        
+        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileExtension = originalURL.pathExtension
+        let fullURL = audioURL + ".\(fileExtension)"
+        let renamedURL = documentsDirectory.appendingPathComponent(fullURL)
+
+        do {
+            try FileManager.default.moveItem(at: originalURL, to: renamedURL)
+            storageService?.saveFileOnDevice(originalURL: renamedURL)
+        } catch {
+            print("Failed to rename recording file: \(error.localizedDescription)")
+        }
     }
     
     private func setupAudioSession() {

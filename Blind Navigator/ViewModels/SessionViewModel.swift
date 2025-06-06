@@ -23,15 +23,15 @@ final class SessionViewModel: NSObject, ObservableObject {
     
     private var fileURL: URL?
     private var sessionStartTime: TimeInterval = 0
-    let formatter: DateFormatter
+    private let formatter: DateFormatter
     
     override init() {
         self.authVM = AuthViewModel()
         self.locationService = LocationService()
-        self.audioService = AudioService(authViewModel: authVM)
         self.predictionService = PredictionService()
         self.storageService = StorageService()
-        
+        self.audioService = AudioService(authViewModel: authVM, storageService: storageService)
+
         self.formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSS"
         formatter.locale = Locale(identifier: "en_US_POSIX")
