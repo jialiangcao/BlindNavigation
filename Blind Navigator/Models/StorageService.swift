@@ -52,16 +52,7 @@ class StorageService: StorageServiceProtocol {
     
     func uploadFile(localFileURL: URL, remotePath: String, completion: @escaping (Result<URL, Error>) -> Void) {
         let storageRef = Storage.storage().reference(withPath: remotePath)
-        var data: Data?
-        do {
-            data = try Data(contentsOf: localFileURL)
-        } catch {
-            print("Error creating data from file URL")
-            return
-        }
-        
-        // Needs to use putData instead of putFile to avoid iOS reusing the same upload task
-        storageRef.putData(data!, metadata: nil) { metadata, error in
+        storageRef.putFile(from: localFileURL, metadata: nil) { metadata, error in
             if let error = error {
                 completion(.failure(error))
                 return
@@ -76,6 +67,11 @@ class StorageService: StorageServiceProtocol {
                 }
             }
         }
+        
+        // Unused
+        //uploadTask.observe(.progress) { snapshot in
+        //    let percent = 100.0 * Double(snapshot.progress?.completedUnitCount ?? 0) / Double(snapshot.progress?.totalUnitCount ?? 1)
+        //}
     }
     
     func saveFileOnDevice(originalURL: URL) {
@@ -97,7 +93,7 @@ class StorageService: StorageServiceProtocol {
         savedPaths.append(fileURL.path)
         UserDefaults.standard.set(savedPaths, forKey: historyKey)
     }
-    
+
     func fetchLocalHistory() -> [URL] {
         let savedPaths = UserDefaults.standard.stringArray(forKey: historyKey) ?? []
         return savedPaths.compactMap { URL(fileURLWithPath: $0) }
@@ -120,5 +116,5 @@ class StorageService: StorageServiceProtocol {
         savedPaths.removeAll { $0 == localFileURL.path }
         UserDefaults.standard.set(savedPaths, forKey: historyKey)
     }
-    
+
 }
