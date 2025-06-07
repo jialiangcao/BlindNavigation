@@ -54,6 +54,7 @@ class StorageService: StorageServiceProtocol {
         let storageRef = Storage.storage().reference(withPath: remotePath)
         storageRef.putFile(from: localFileURL, metadata: nil) { metadata, error in
             if let error = error {
+                print(error)
                 completion(.failure(error))
                 return
             }

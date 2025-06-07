@@ -185,8 +185,25 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     }
     
     private func updateDecibelLevel(data: [Float]) {
+        guard !data.isEmpty else {
+            delegate?.didUpdateDecibelLevel(0)
+            print("Data is empty")
+            return
+        }
+        
         let rms = sqrt(data.reduce(0) { $0 + pow($1, 2)} / Float(data.count))
+        
+        guard rms > 0 else {
+            delegate?.didUpdateDecibelLevel(0)
+            return
+        }
+        
         let decibels = 20 * log10(rms / 0.00002)
-        delegate?.didUpdateDecibelLevel(Int(decibels))
+        
+        if decibels.isFinite {
+            delegate?.didUpdateDecibelLevel(Int(decibels))
+        } else {
+            delegate?.didUpdateDecibelLevel(0)
+        }
     }
 }
