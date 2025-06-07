@@ -12,13 +12,26 @@ protocol LocationServiceDelegate: AnyObject {
     func didUpdateLocation(_ location: CLLocation, accuracy: CLLocationAccuracy)
 }
 
+// Abstracted CLLocationManager protocol for dependency injection
+// Necessary to create a mock class for testing
+protocol LocationManagerType: AnyObject {
+    var delegate: CLLocationManagerDelegate? { get set }
+    var desiredAccuracy: CLLocationAccuracy { get set }
+    func requestWhenInUseAuthorization()
+    func startUpdatingLocation()
+    func stopUpdatingLocation()
+}
+
+extension CLLocationManager: LocationManagerType {}
+
 class LocationService: NSObject {
     weak var delegate: LocationServiceDelegate?
-    private let clManager = CLLocationManager()
+    private let clManager: LocationManagerType
     
-    override init() {
+    init(manager: LocationManagerType = CLLocationManager()) {
+        self.clManager = manager
         super.init()
-        clManager.delegate = self
+        self.clManager.delegate = self
         clManager.desiredAccuracy = kCLLocationAccuracyBest
     }
     
