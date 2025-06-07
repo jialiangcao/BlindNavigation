@@ -53,12 +53,9 @@ class PredictionService {
         }
     }
     
-    private func fillMultiArray(_ array: MLMultiArray, with segment: [[Double]]) {
+    func fillMultiArray(_ array: MLMultiArray, with segment: [[Double]]) {
         let ptr = array.dataPointer.bindMemory(to: Double.self, capacity: array.count)
         
-        // Change to avoid hard coding?
-        // CHANGE TO ONLY DO THIS FOR ONE CHANNEL
-        // Having a lower sample rate will crash
         for channel in 0..<2 {
             let channelOffset = channel*64*173
             for i in 0..<64 {
@@ -74,7 +71,7 @@ class PredictionService {
         return try MLDictionaryFeatureProvider(dictionary: ["x": featureValue])
     }
     
-    private func accumulateScores(_ scores: inout [Double], from output: MLFeatureProvider) {
+    func accumulateScores(_ scores: inout [Double], from output: MLFeatureProvider) {
         guard let outputFeature = output.featureValue(for: "linear_0") else {
             print("Missing output feature")
             return
@@ -92,7 +89,7 @@ class PredictionService {
         }
     }
     
-    private func handleFinalPrediction(_ scores: [Double]) -> String {
+    func handleFinalPrediction(_ scores: [Double]) -> String {
         guard let maxIndex = scores.enumerated().max(by: { $0.element < $1.element })?.offset else {
             print("Failed to calculate max index of prediction array")
             return "Error"
