@@ -15,11 +15,12 @@ final class SessionViewModel: NSObject, ObservableObject {
     @Published var decibelLevel: Int?
     @Published var prediction: String?
     
-    private let authVM: AuthViewModel
+    // declare as type init with contsttuctor for this and storage !!!!
+    private let authVM: AuthViewModelType
+    private let storageService: StorageServiceType
     private let locationService: LocationService
     private let audioService: AudioService
     private let predictionService: PredictionService
-    private let storageService: StorageService
     
     private var fileURL: URL?
     private var sessionStartTime: TimeInterval = 0
@@ -27,9 +28,9 @@ final class SessionViewModel: NSObject, ObservableObject {
     
     override init() {
         self.authVM = AuthViewModel()
+        self.storageService = StorageService()
         self.locationService = LocationService()
         self.predictionService = PredictionService()
-        self.storageService = StorageService()
         self.audioService = AudioService(authViewModel: authVM, storageService: storageService)
 
         self.formatter = DateFormatter()

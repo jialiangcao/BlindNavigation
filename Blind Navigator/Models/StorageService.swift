@@ -8,7 +8,7 @@
 import Foundation
 import FirebaseStorage
 
-protocol StorageServiceProtocol {
+protocol StorageServiceType {
     func createCSVFile(sessionId: String, headers: String) throws -> URL
     func append(row: String, to fileURL: URL) throws
     func closeFile()
@@ -18,7 +18,7 @@ protocol StorageServiceProtocol {
     func deleteFile(localFileURL: URL)
 }
 
-class StorageService: StorageServiceProtocol {
+class StorageService: StorageServiceType {
     private var fileHandle: FileHandle?
     private let historyKey = "sessionFileHistory"
     

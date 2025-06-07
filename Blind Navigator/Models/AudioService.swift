@@ -7,6 +7,50 @@
 
 import AVFoundation
 
+// Audio Engine abstraction
+protocol AudioEngineType {
+    var engineInputNode: AudioInputNodeType { get }
+    // Renamed start() and stop() to avoid name conflicts
+    func engineStart() throws
+    func engineStop()
+}
+
+protocol AudioInputNodeType {
+    func inputFormat(forBus bus: Int) -> AVAudioFormat
+    func installTap(onBus bus: Int,
+                    bufferSize: AVAudioFrameCount,
+                    format: AVAudioFormat?,
+                    block: @escaping (AVAudioPCMBuffer, AVAudioTime) -> Void)
+}
+
+// Recorder abstraction
+protocol AudioRecorderType {
+    var url: URL { get }
+    var delegate: AVAudioRecorderDelegate? { get set }
+    func prepareToRecord() -> Bool
+    func record() -> Bool
+    func stop()
+}
+
+// Networking abstraction
+protocol URLSessionDataTaskType {
+    func resume()
+}
+
+protocol URLSessionType {
+    func dataTask(with request: URLRequest, completionHandler: @escaping @Sendable (Data?, URLResponse?, (any Error)?) -> Void) -> URLSessionDataTaskType
+}
+
+// UserDefaults abstraction
+protocol UserDefaultsType {
+    func bool(forKey defaultName: String) -> Bool
+}
+
+// Other Services
+protocol AuthViewModelType: AnyObject {
+    var idToken: String? { get }
+}
+
 protocol AudioServiceDelegate: AnyObject {
     func didProcessAudio(_ spectrogram: [[[Double]]])
     func didUpdateDecibelLevel(_ decibels: Int)
@@ -14,30 +58,56 @@ protocol AudioServiceDelegate: AnyObject {
 
 class AudioService: NSObject, AVAudioRecorderDelegate {
     weak var delegate: AudioServiceDelegate?
-    private var engine: AVAudioEngine?
-    private var recorder: AVAudioRecorder?
-    private var buffer: [Float] = []
-    private let requiredSize = Int(Constants.audioConfig.duration * Double(Constants.audioConfig.sampleRate))
-    private var lastUpdateTime = 0.0
+    
+    private var engine: AudioEngineType
+    private var recorder: AudioRecorderType
+    private let urlSession: URLSessionType
+    private let userDefaults: UserDefaultsType
+    private let authViewModel: AuthViewModelType
+    private let storageService: StorageServiceType
+    
     private var formatter: DateFormatter
-    private var audioURL: String
+    private let preferPredictions: Bool
+    private var buffer: [Float] = []
+    private var lastUpdateTime: TimeInterval = 0.0
+    private let requiredSize = Int(Constants.audioConfig.duration * Double(Constants.audioConfig.sampleRate))
+    var audioURL: String
     
-    private let preferPredictions = UserDefaults.standard.bool(forKey: "preferPredictions")
-    
-    weak var authViewModel: AuthViewModel?
-    weak var storageService: StorageService?
-    
-    init(authViewModel: AuthViewModel, storageService: StorageService) {
+    init(authViewModel: AuthViewModelType,
+         storageService: StorageServiceType,
+         engine: AudioEngineType = AVAudioEngine(),
+         recorder: AudioRecorderType = {
+        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("recording_\(Date().timeIntervalSince1970).m4a")
+        let settings = [
+            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+            AVSampleRateKey: 44100,
+            AVNumberOfChannelsKey: 2,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+        ]
+        return try! AVAudioRecorder(url: url, settings: settings)
+    }(),
+         urlSession: URLSessionType = URLSession.shared,
+         userDefaults: UserDefaultsType = UserDefaults.standard,
+    ) {
         self.authViewModel = authViewModel
         self.storageService = storageService
+        self.engine = engine
+        self.recorder = recorder
+        self.urlSession = urlSession
+        self.userDefaults = userDefaults
         
         self.formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSS"
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone.current
-        audioURL = "audio-"+formatter.string(from: Date())
+        self.audioURL = "audio-"+formatter.string(from: Date())
+        
+        self.preferPredictions = userDefaults.bool(forKey: "preferPredictions")
+        
+        super.init()
+        self.recorder.delegate = self
     }
-
+    
     func startRecording() {
         setupAudioSession()
         setupRecorder()
@@ -45,22 +115,17 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     }
     
     func stopRecording() {
-        engine?.stop()
-        recorder?.stop()
-        
-        guard let originalURL = recorder?.url else {
-              print("No recording url")
-              return
-        }
+        engine.engineStop()
+        recorder.stop()
         
         let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let fileExtension = originalURL.pathExtension
+        let fileExtension = recorder.url.pathExtension
         let fullURL = audioURL + ".\(fileExtension)"
         let renamedURL = documentsDirectory.appendingPathComponent(fullURL)
-
+        
         do {
-            try FileManager.default.moveItem(at: originalURL, to: renamedURL)
-            storageService?.saveFileOnDevice(originalURL: renamedURL)
+            try FileManager.default.moveItem(at: recorder.url, to: renamedURL)
+            storageService.saveFileOnDevice(originalURL: renamedURL)
         } catch {
             print("Failed to rename recording file: \(error.localizedDescription)")
         }
@@ -100,29 +165,26 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
     }
     
     private func setupRecorder() {
-        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("recording_\(Date().timeIntervalSince1970).m4a")
-        let settings = [
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 44100,
-            AVNumberOfChannelsKey: 2,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-        ]
-        recorder = try? AVAudioRecorder(url: url, settings: settings)
-        recorder?.delegate = self
-        recorder?.prepareToRecord()
-        recorder?.record()
+        guard recorder.prepareToRecord() == true else {
+            print("Error preparing audio recording")
+            return
+        }
+        
+        guard recorder.record() == true else {
+            print("Error starting audio recording")
+            return
+        }
     }
     
     private func setupEngine() {
-        engine = AVAudioEngine()
-        let inputNode = engine?.inputNode
-        let format = inputNode?.inputFormat(forBus: 0)
+        let inputNode = engine.engineInputNode
+        let format = inputNode.inputFormat(forBus: 0)
         
-        inputNode?.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
+        inputNode.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
             self?.processBuffer(buffer)
         }
         
-        try? engine?.start()
+        try? engine.engineStart()
     }
     
     private func processBuffer(_ buffer: AVAudioPCMBuffer) {
@@ -150,8 +212,8 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
         postAudio(bufferMemory)
     }
     
-    private func postAudio (_ bufferData: Data) {
-        guard let idToken = authViewModel?.idToken else {
+    func postAudio (_ bufferData: Data) {
+        guard let idToken = authViewModel.idToken else {
             print("No token available")
             return
         }
@@ -163,7 +225,8 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
         print(idToken)
         request.httpBody = bufferData
         
-        let task = URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+        // Notice using protocol, not URLSession
+        let task = urlSession.dataTask(with: request) { [weak self] data, response, error in
             guard let self = self else {
                 print("Self object does not exist, may have been deallocated")
                 return
@@ -184,7 +247,7 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
         task.resume()
     }
     
-    private func updateDecibelLevel(data: [Float]) {
+    func updateDecibelLevel(data: [Float]) {
         guard !data.isEmpty else {
             delegate?.didUpdateDecibelLevel(0)
             print("Data is empty")
@@ -207,3 +270,23 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
         }
     }
 }
+
+extension AVAudioEngine: AudioEngineType {
+    var engineInputNode: AudioInputNodeType { return self.inputNode }
+    func engineStart() throws { try self.start() }
+    func engineStop() { self.stop() }
+}
+
+extension AVAudioInputNode: AudioInputNodeType {}
+
+extension AVAudioRecorder: AudioRecorderType {}
+
+extension URLSessionDataTask: URLSessionDataTaskType {}
+
+extension URLSession: URLSessionType {
+    func dataTask(with request: URLRequest, completionHandler: @escaping @Sendable (Data?, URLResponse?, (any Error)?) -> Void) -> any URLSessionDataTaskType {
+        return (self.dataTask(with: request, completionHandler: completionHandler) as URLSessionDataTask)
+    }
+}
+
+extension UserDefaults: UserDefaultsType {}

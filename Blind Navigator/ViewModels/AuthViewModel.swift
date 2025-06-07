@@ -11,7 +11,7 @@ import SwiftUI
 import FirebaseAuth
 import Combine
 
-final class AuthViewModel: ObservableObject {
+final class AuthViewModel: ObservableObject, AuthViewModelType {
     // MARK: - Global auth state
     @Published var user: FirebaseAuth.User? // nil if signed out
     @Published var idToken: String?

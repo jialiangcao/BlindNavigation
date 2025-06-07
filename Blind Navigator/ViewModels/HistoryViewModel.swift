@@ -12,7 +12,7 @@ class HistoryViewModel: ObservableObject {
     @Published var selectedFiles: Set<URL> = []
     @Published var uploadStatus: Bool?
     
-    private let storageService: StorageServiceProtocol
+    private let storageService: StorageServiceType
     private let authVM: AuthViewModel
 
     init() {
