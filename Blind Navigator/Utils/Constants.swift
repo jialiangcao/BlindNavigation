@@ -12,6 +12,5 @@ enum Constants {
     static let apiURL = URL(string:"https://sidewalkapi-278558760994.us-east4.run.app/process_audio")
     static let localURL = URL(string:"http://127.0.0.1:5000/process_audio")
     static let audioConfig = (sampleRate: 44100, duration: 2.0)
-    static let decibelUpdateInterval: TimeInterval = 1.0
     static let numSegments = 2;
 }

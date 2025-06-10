@@ -24,7 +24,7 @@ protocol LocationManagerType: AnyObject {
 
 extension CLLocationManager: LocationManagerType {}
 
-class LocationService: NSObject {
+final class LocationService: NSObject {
     weak var delegate: LocationServiceDelegate?
     private let clManager: LocationManagerType
     

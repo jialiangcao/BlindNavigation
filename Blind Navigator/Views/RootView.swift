@@ -12,24 +12,30 @@ struct RootView: View {
     @EnvironmentObject var navViewModel: NavigationViewModel
 
     var body: some View {
-        switch navViewModel.currentScreen {
-        case .auth:
-            // Testing convenience
-            AuthView()
-            //StartSessionView(startSession: {
-            //    navViewModel.startSession()
-            //})
-        case .startSession:
-            StartSessionView(startSession: {
-                navViewModel.startSession()
-            })
-        case .activeSession:
-            StopwatchView()
-            ActiveSessionView(
-                sessionViewModel: SessionViewModel(),
-                endSession: {
-                    navViewModel.endSession()
+        VStack {
+            switch navViewModel.currentScreen {
+            case .auth:
+                AuthView()
+            case .startSession:
+                StartSessionView(startSession: {
+                    navViewModel.startSession()
                 })
+            case .activeSession:
+                StopwatchView()
+                ActiveSessionView(
+                    sessionViewModel: SessionViewModel(),
+                    endSession: {
+                        navViewModel.endSession()
+                    })
+            }
+        }
+        // Janky signed session fix
+        .onAppear {
+            if authViewModel.user != nil {
+                navViewModel.currentScreen = .startSession
+            } else {
+                navViewModel.currentScreen = .auth
+            }
         }
     }
 }

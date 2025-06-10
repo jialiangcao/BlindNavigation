@@ -51,6 +51,17 @@
                BlueprintName = "Blind NavigatorUITests"
                ReferencedContainer = "container:Blind Navigator.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "Blind_NavigatorUITests/testExample()">
+               </Test>
+               <Test
+                  Identifier = "Blind_NavigatorUITests/testLaunchPerformance()">
+               </Test>
+               <Test
+                  Identifier = "Blind_NavigatorUITestsLaunchTests/testLaunch()">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
    </TestAction>

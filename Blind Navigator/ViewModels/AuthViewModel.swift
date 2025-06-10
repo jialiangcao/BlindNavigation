@@ -9,7 +9,25 @@
 
 import SwiftUI
 import FirebaseAuth
-import Combine
+
+protocol AuthViewModelType: AnyObject {
+     var user: FirebaseAuth.User? { get }
+     var idToken: String? { get }
+     var errorMessage: String? { get }
+     var isLoading: Bool { get }
+     
+     var signInEmail: String { get set }
+     var signInPassword: String { get set }
+     var signUpEmail: String { get set }
+     var signUpPassword: String { get set }
+     var signUpConfirmPassword: String { get set }
+     
+     func signIn(completion: @escaping (Bool) -> Void)
+     func signUp()
+     func resetPassword()
+     func signOut()
+     func getUserEmail() -> String?
+}
 
 final class AuthViewModel: ObservableObject, AuthViewModelType {
     // MARK: - Global auth state
@@ -31,6 +49,7 @@ final class AuthViewModel: ObservableObject, AuthViewModelType {
     @Published var signUpConfirmPassword = ""
     
     init() {
+        self.user = Auth.auth().currentUser
         authHandle = Auth.auth().addStateDidChangeListener { _, user in
             self.user = user
             user?.getIDToken { idToken, error in

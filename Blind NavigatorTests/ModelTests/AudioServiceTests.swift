@@ -8,8 +8,8 @@
 @testable import Blind_Navigator
 
 import XCTest
-
 import AVFoundation
+import FirebaseAuth
 
 class MockEngine: AudioEngineType {
     var engineStartCalled = false
@@ -84,7 +84,53 @@ class MockDefaults: UserDefaultsType {
 }
 
 class MockAuth: AuthViewModelType {
+    var user: FirebaseAuth.User?
     var idToken: String? = "mock-token"
+    var errorMessage: String? = nil
+    var isLoading: Bool = false
+
+    var signInEmail: String = ""
+    var signInPassword: String = ""
+    var signUpEmail: String = ""
+    var signUpPassword: String = ""
+    var signUpConfirmPassword: String = ""
+
+    private var isSignedIn = false
+
+    func signIn(completion: @escaping (Bool) -> Void) {
+        if signInEmail == "test@example.com" && signInPassword == "password" {
+            isSignedIn = true
+            completion(true)
+        } else {
+            errorMessage = "Invalid credentials"
+            completion(false)
+        }
+    }
+
+    func signUp() {
+        if signUpPassword == signUpConfirmPassword {
+            isSignedIn = true
+        } else {
+            errorMessage = "Passwords do not match"
+        }
+    }
+
+    func resetPassword() {
+        if signInEmail.isEmpty {
+            errorMessage = "Enter your email to reset."
+        } else {
+            errorMessage = "Reset email sent."
+        }
+    }
+
+    func signOut() {
+        isSignedIn = false
+        user = nil
+    }
+
+    func getUserEmail() -> String? {
+        return isSignedIn ? signInEmail : nil
+    }
 }
 
 class MockDelegate: AudioServiceDelegate {

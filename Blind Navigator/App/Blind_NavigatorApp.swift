@@ -22,11 +22,6 @@ struct Blind_NavigatorApp: App {
             RootView()
                 .environmentObject(authViewModel)
                 .environmentObject(navigationViewModel)
-                .onAppear {
-                    if authViewModel.user != nil {
-                        navigationViewModel.signedIn()
-                    }
-                }
         }
     }
 }

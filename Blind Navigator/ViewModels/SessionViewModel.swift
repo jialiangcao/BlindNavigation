@@ -15,8 +15,7 @@ final class SessionViewModel: NSObject, ObservableObject {
     @Published var decibelLevel: Int?
     @Published var prediction: String?
     
-    // declare as type init with contsttuctor for this and storage !!!!
-    private let authVM: AuthViewModelType
+    private let authViewModel: AuthViewModelType
     private let storageService: StorageServiceType
     private let locationService: LocationService
     private let audioService: AudioService
@@ -27,11 +26,11 @@ final class SessionViewModel: NSObject, ObservableObject {
     private let formatter: DateFormatter
     
     override init() {
-        self.authVM = AuthViewModel()
+        self.authViewModel = AuthViewModel()
         self.storageService = StorageService()
         self.locationService = LocationService()
         self.predictionService = PredictionService()
-        self.audioService = AudioService(authViewModel: authVM, storageService: storageService)
+        self.audioService = AudioService(authViewModel: authViewModel, storageService: storageService)
 
         self.formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSS"
@@ -52,7 +51,6 @@ final class SessionViewModel: NSObject, ObservableObject {
     func startSession() {
         sessionStartTime = Date().timeIntervalSince1970
         do {
-            // CSV headers: timestamp, elapsed, latitude, longitude, prediction
             let headers = "timestamp,elapsed,latitude,longitude,prediction\n"
             let date = Date()
             let now = formatter.string(from: date)

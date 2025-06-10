@@ -13,7 +13,8 @@ enum AppScreen {
     case startSession
     case activeSession
 }
-class NavigationViewModel: ObservableObject {
+
+final class NavigationViewModel: ObservableObject {
     @Published var currentScreen: AppScreen = .auth
     
     func startSession() {

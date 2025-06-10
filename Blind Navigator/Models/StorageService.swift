@@ -18,7 +18,7 @@ protocol StorageServiceType {
     func deleteFile(localFileURL: URL)
 }
 
-class StorageService: StorageServiceType {
+final class StorageService: StorageServiceType {
     private var fileHandle: FileHandle?
     private let historyKey = "sessionFileHistory"
     
@@ -68,11 +68,6 @@ class StorageService: StorageServiceType {
                 }
             }
         }
-        
-        // Unused
-        //uploadTask.observe(.progress) { snapshot in
-        //    let percent = 100.0 * Double(snapshot.progress?.completedUnitCount ?? 0) / Double(snapshot.progress?.totalUnitCount ?? 1)
-        //}
     }
     
     func saveFileOnDevice(originalURL: URL) {
@@ -89,7 +84,7 @@ class StorageService: StorageServiceType {
         }
     }
     
-    private func saveToDefaults(fileURL: URL) {
+    func saveToDefaults(fileURL: URL) {
         var savedPaths = UserDefaults.standard.stringArray(forKey: historyKey) ?? []
         savedPaths.append(fileURL.path)
         UserDefaults.standard.set(savedPaths, forKey: historyKey)
@@ -117,5 +112,4 @@ class StorageService: StorageServiceType {
         savedPaths.removeAll { $0 == localFileURL.path }
         UserDefaults.standard.set(savedPaths, forKey: historyKey)
     }
-
 }

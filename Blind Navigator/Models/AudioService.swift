@@ -47,16 +47,13 @@ protocol UserDefaultsType {
 }
 
 // Other Services
-protocol AuthViewModelType: AnyObject {
-    var idToken: String? { get }
-}
 
 protocol AudioServiceDelegate: AnyObject {
     func didProcessAudio(_ spectrogram: [[[Double]]])
     func didUpdateDecibelLevel(_ decibels: Int)
 }
 
-class AudioService: NSObject, AVAudioRecorderDelegate {
+final class AudioService: NSObject, AVAudioRecorderDelegate {
     weak var delegate: AudioServiceDelegate?
     
     private var engine: AudioEngineType
@@ -80,7 +77,7 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
         let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("recording_\(Date().timeIntervalSince1970).m4a")
         let settings = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 44100,
+            AVSampleRateKey: Constants.audioConfig.sampleRate,
             AVNumberOfChannelsKey: 2,
             AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
         ]
@@ -198,6 +195,7 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
         if currentTime - lastUpdateTime >= 2.0 {
             updateDecibelLevel(data: newData)
             lastUpdateTime = currentTime
+            self.buffer.removeAll() // Prevents unbounded growth
         }
     }
     
@@ -207,7 +205,9 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
         
         let dataToSend = Array(buffer.suffix(requiredSize))
         buffer.removeAll()
-        let dataToDouble = dataToSend.map { Double($0) }
+        // Coverting to Float16 to save data. Float 64 sends about ~0.673 mb, Float 16 sends ~0.15 mb.
+        // Result is send back and processed as Float64
+        let dataToDouble = dataToSend.map { Float16($0) }
         let bufferMemory = dataToDouble.withUnsafeBytes { Data($0) }
         postAudio(bufferMemory)
     }
@@ -222,7 +222,6 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
         request.httpMethod = "POST"
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
-        print(idToken)
         request.httpBody = bufferData
         
         // Notice using protocol, not URLSession

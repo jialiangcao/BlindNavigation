@@ -7,17 +7,17 @@
 
 import Foundation
 
-class HistoryViewModel: ObservableObject {
+final class HistoryViewModel: ObservableObject {
     @Published var history: [URL] = []
     @Published var selectedFiles: Set<URL> = []
     @Published var uploadStatus: Bool?
     
     private let storageService: StorageServiceType
-    private let authVM: AuthViewModel
+    private let authViewModel: AuthViewModelType
 
-    init() {
-        self.storageService = StorageService()
-        self.authVM = AuthViewModel()
+    init(storageService: StorageServiceType = StorageService(), authViewModel: AuthViewModelType = AuthViewModel()) {
+        self.storageService = storageService
+        self.authViewModel = authViewModel
         loadHistory()
     }
 
@@ -34,7 +34,7 @@ class HistoryViewModel: ObservableObject {
     }
     
     public func uploadSelectedFiles() {
-        guard let email = authVM.getUserEmail() else {
+        guard let email = authViewModel.getUserEmail() else {
             print("No email")
             uploadStatus = false
             return

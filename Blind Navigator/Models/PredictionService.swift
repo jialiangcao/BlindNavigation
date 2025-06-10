@@ -11,7 +11,7 @@ protocol PredictionServiceDelegate: AnyObject {
     func didReceivePrediction(_ prediction: String)
 }
 
-class PredictionService {
+final class PredictionService {
     weak var delegate: PredictionServiceDelegate?
     var model: MLModel?
     private var predictions = [Int](repeating: 0, count: 7)

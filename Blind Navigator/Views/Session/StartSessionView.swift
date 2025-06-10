@@ -19,7 +19,7 @@ struct StartSessionView: View {
             [
                 SettingsSection(title: "Session", items: [
                     SettingItem(
-                        title: "Predictions (Requires data)",
+                        title: "Predictions (Only use with Unlimited LTE)",
                         iconName: "waveform",
                         iconColor: .blue,
                         type: .toggle($preferPredictions)
