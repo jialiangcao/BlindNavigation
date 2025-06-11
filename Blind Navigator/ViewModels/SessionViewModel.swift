@@ -69,10 +69,15 @@ final class SessionViewModel: NSObject, ObservableObject {
         audioService.stopRecording()
         storageService.closeFile()
         storageService.saveFileOnDevice(originalURL: fileURL!)
+        stopCameraService()
     }
     
     func startCameraService() async {
         self.cameraService = await CameraService()
+    }
+    
+    func stopCameraService() {
+        self.cameraService?.stopSession()
     }
     
     private func logCurrentData() {

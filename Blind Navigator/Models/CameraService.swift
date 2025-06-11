@@ -38,8 +38,6 @@ final class CameraService {
         
         captureSession.beginConfiguration()
         
-        let videoDevice: AVCaptureDevice?
-        
         // Will not work on a simulator or preview
         guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
             print("Error creating videoDevice")

@@ -11,6 +11,8 @@ struct ActiveSessionView: View {
     @ObservedObject var sessionViewModel: SessionViewModel
     let endSession: () -> Void
     
+    @State private var isRecording = false
+    
     @State private var cameraPosition = MapCameraPosition.region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060), // Default to NYC
@@ -49,14 +51,21 @@ struct ActiveSessionView: View {
                 if let service = sessionViewModel.cameraService {
                     CameraView(session: service.captureSession)
                         .ignoresSafeArea()
-                } else {
-                    Text("Press the button to start recording")
-                    Button("Start") {
-                        Task {
+                }
+                Button(isRecording ? "Stop Recording" : "Start Recording") {
+                    Task {
+                        if (isRecording) {
+                            sessionViewModel.stopCameraService()
+                        } else {
                             await sessionViewModel.startCameraService()
                         }
+                        isRecording.toggle()
                     }
                 }
+                .padding()
+                .background(isRecording ? Color.red : Color.green)
+                .foregroundColor(.white)
+                .cornerRadius(8)
             }
             .tabItem {
                 Label("Camera", systemImage: "camera.fill")
