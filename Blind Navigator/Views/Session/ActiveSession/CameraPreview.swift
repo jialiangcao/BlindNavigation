@@ -1,5 +1,5 @@
 //
-//  CameraView.swift
+//  CameraPreview.swift
 //  Blind Navigator
 //
 //  Created by Jialiang Cao on 6/11/25.
@@ -8,7 +8,7 @@
 import SwiftUI
 import AVFoundation
 
-struct CameraView: UIViewRepresentable {
+struct CameraPreview: UIViewRepresentable {
     let session: AVCaptureSession
     
     func makeUIView(context: Context) -> UIView {

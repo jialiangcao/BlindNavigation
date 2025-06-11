@@ -21,12 +21,16 @@ struct RootView: View {
                     navViewModel.startSession()
                 })
             case .activeSession:
-                StopwatchView()
                 ActiveSessionView(
                     sessionViewModel: SessionViewModel(),
                     endSession: {
                         navViewModel.endSession()
-                    })
+                    }
+                )
+                .overlay(
+                    StopwatchView()
+                    .padding(), alignment: .top
+                )
             }
         }
         // Janky signed session fix
