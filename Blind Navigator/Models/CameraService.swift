@@ -22,10 +22,15 @@ final class CameraService {
             return isAuthorized
         }
     }
+    var setupSuccess: Bool = false // Prevents crashing when running start/stopRecording() without a properly configured session
 
     init () async {
         self.captureSession = AVCaptureSession()
-        await setUpCaptureSession()
+        setupSuccess = await setUpCaptureSession()
+        guard setupSuccess == true else {
+            print("Error creating capture session")
+            return
+        }
         startSession()
     }
     
@@ -33,24 +38,26 @@ final class CameraService {
         stopSession()
     }
 
-    func setUpCaptureSession() async {
-        guard await isAuthorized else { return }
+    func setUpCaptureSession() async -> Bool {
+        guard await isAuthorized else { return false }
         
         captureSession.beginConfiguration()
         
+        // TODO: Show errors on screen
         // Will not work on a simulator or preview
         guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
             print("Error creating videoDevice")
-            return
+            return false
         }
         
         guard let videoDeviceInput = try? AVCaptureDeviceInput(device: videoDevice), captureSession.canAddInput(videoDeviceInput) != false else {
             print("Error setting videoDeviceInput")
-            return
+            return false
         }
         
         captureSession.addInput(videoDeviceInput)
         captureSession.commitConfiguration()
+        return true
     }
     
     func startSession() {
@@ -58,6 +65,10 @@ final class CameraService {
     }
     
     func stopSession() {
+        guard setupSuccess == true else {
+            print("No recording session")
+            return
+        }
         captureSession.stopRunning()
     }
 }
