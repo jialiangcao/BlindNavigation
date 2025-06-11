@@ -14,6 +14,7 @@ final class SessionViewModel: NSObject, ObservableObject {
     @Published var locationAccuracy: CLLocationAccuracy?
     @Published var decibelLevel: Int?
     @Published var prediction: String?
+    @Published var cameraService: CameraService?
     
     private let authViewModel: AuthViewModelType
     private let storageService: StorageServiceType
@@ -68,6 +69,10 @@ final class SessionViewModel: NSObject, ObservableObject {
         audioService.stopRecording()
         storageService.closeFile()
         storageService.saveFileOnDevice(originalURL: fileURL!)
+    }
+    
+    func startCameraService() async {
+        self.cameraService = await CameraService()
     }
     
     private func logCurrentData() {

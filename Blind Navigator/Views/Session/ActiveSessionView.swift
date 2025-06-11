@@ -44,6 +44,25 @@ struct ActiveSessionView: View {
             }
             .tag(0)
             
+            // MARK: - Camera Tab
+            VStack {
+                if let service = sessionViewModel.cameraService {
+                    CameraView(session: service.captureSession)
+                        .ignoresSafeArea()
+                } else {
+                    Text("Press the button to start recording")
+                    Button("Start") {
+                        Task {
+                            await sessionViewModel.startCameraService()
+                        }
+                    }
+                }
+            }
+            .tabItem {
+                Label("Camera", systemImage: "camera.fill")
+            }
+            .tag(1)
+            
             // MARK: - Session Tab
             VStack(spacing: 0) {
                 ScrollView {
@@ -108,7 +127,7 @@ struct ActiveSessionView: View {
             .tabItem {
                 Label("Session", systemImage: "gearshape.fill")
             }
-            .tag(1)
+            .tag(2)
         }
         .tint(.cyan)
         .onAppear {
