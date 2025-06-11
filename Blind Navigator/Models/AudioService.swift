@@ -218,7 +218,7 @@ final class AudioService: NSObject, AVAudioRecorderDelegate {
             return
         }
         
-        var request = URLRequest(url: Constants.localURL!)
+        var request = URLRequest(url: Constants.apiURL!)
         request.httpMethod = "POST"
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
