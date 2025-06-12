@@ -60,6 +60,10 @@ final class CameraService {
         return true
     }
     
+    func getCaptureSession() -> AVCaptureSession {
+        return captureSession
+    }
+    
     func startSession() {
         captureSession.startRunning()
     }

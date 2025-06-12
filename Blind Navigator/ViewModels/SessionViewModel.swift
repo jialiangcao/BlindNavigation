@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreLocation
+import AVFoundation
 
 final class SessionViewModel: NSObject, ObservableObject {
     @Published var userLocation: CLLocationCoordinate2D?
@@ -14,13 +15,14 @@ final class SessionViewModel: NSObject, ObservableObject {
     @Published var locationAccuracy: CLLocationAccuracy?
     @Published var decibelLevel: Int?
     @Published var prediction: String?
-    @Published var cameraService: CameraService?
+    @Published var cameraSession: AVCaptureSession?
     
     private let authViewModel: AuthViewModelType
     private let storageService: StorageServiceType
     private let locationService: LocationService
     private let audioService: AudioService
     private let predictionService: PredictionService
+    private var cameraService: CameraService?
     
     private var fileURL: URL?
     private var sessionStartTime: TimeInterval = 0
@@ -74,6 +76,10 @@ final class SessionViewModel: NSObject, ObservableObject {
     
     func startCameraService() async {
         self.cameraService = await CameraService()
+        // Needs to run on the main thread because cameraSession is @Published
+        await MainActor.run {
+            self.cameraSession = self.cameraService?.getCaptureSession()
+        }
     }
     
     func stopCameraService() {
