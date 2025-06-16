@@ -70,11 +70,11 @@ struct StartSessionView: View {
             .edgesIgnoringSafeArea(.all)
             
             VStack(alignment: .leading) {
-                HStack {
-                    Button(action: { showingSettings.toggle() }) {
+                Button(action: { showingSettings.toggle() }) {
+                    HStack {
                         Image(systemName: "gear")
+                        Text("Settings")
                     }
-                    Text("Settings")
                 }
                 .foregroundColor(Color.white)
                 .padding(13)
@@ -88,11 +88,11 @@ struct StartSessionView: View {
                 }
                 .buttonStyle(ScaleButtonStyle())
                 
-                HStack {
-                    Button(action: { showingHistory.toggle() }) {
+                Button(action: { showingHistory.toggle() }) {
+                    HStack {
                         Image(systemName: "calendar")
+                        Text("History")
                     }
-                    Text("History")
                 }
                 .foregroundColor(Color.white)
                 .padding(13)
