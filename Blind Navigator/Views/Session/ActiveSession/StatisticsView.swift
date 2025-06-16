@@ -51,7 +51,7 @@ struct StatisticsView: View {
                 Button(action: endSession) {
                     Text("End Session")
                         .font(.headline)
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
                         .background(
@@ -70,4 +70,5 @@ struct StatisticsView: View {
 
 #Preview {
     StatisticsView(sessionViewModel: SessionViewModel(), endSession: {})
+        .preferredColorScheme(.dark)
 }

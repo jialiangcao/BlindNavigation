@@ -52,15 +52,15 @@ struct StartSessionView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                gradient: Gradient(colors: [.mint.opacity(0.2), .white]),
+                gradient: Gradient(colors: [.mint.opacity(0.35), Color(.systemBackground).opacity(1)]),
                 startPoint: .top,
-                endPoint: UnitPoint(x: 0, y: 0.4)
+                endPoint: UnitPoint(x: 0.5, y: 0.8)
             )
             .edgesIgnoringSafeArea(.all)
             
             RadialGradient(
                 gradient: Gradient(colors: [
-                    Color.mint.opacity(0.4)
+                    Color.mint
                 ]),
                 center: .top,
                 startRadius: 5,
@@ -70,13 +70,17 @@ struct StartSessionView: View {
             .edgesIgnoringSafeArea(.all)
             
             VStack(alignment: .leading) {
-                Button(action: { showingSettings.toggle() }) {
-                    Image(systemName: "gear")
+                HStack {
+                    Button(action: { showingSettings.toggle() }) {
+                        Image(systemName: "gear")
+                    }
+                    Text("Settings")
                 }
+                .foregroundColor(Color.white)
                 .padding(13)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.gray, lineWidth: 1).fill(Color.white))
+                        .stroke(Color.gray, lineWidth: 1).fill(Color.black.opacity(0.4)))
                 .frame(maxWidth: .infinity, alignment: .topLeading)
                 .sheet(isPresented: $showingSettings) {
                     SettingsView(sections: settingsSections)
@@ -84,13 +88,17 @@ struct StartSessionView: View {
                 }
                 .buttonStyle(ScaleButtonStyle())
                 
-                Button(action: { showingHistory.toggle() }) {
-                    Image(systemName: "calendar")
+                HStack {
+                    Button(action: { showingHistory.toggle() }) {
+                        Image(systemName: "calendar")
+                    }
+                    Text("History")
                 }
+                .foregroundColor(Color.white)
                 .padding(13)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.gray, lineWidth: 1).fill(Color.white))
+                        .stroke(Color.gray, lineWidth: 1).fill(Color.black.opacity(0.4)))
                 .frame(maxWidth: .infinity, alignment: .topLeading)
                 .sheet(isPresented: $showingHistory) {
                     HistoryView(historyViewModel: HistoryViewModel())
@@ -103,7 +111,8 @@ struct StartSessionView: View {
             .padding()
             
             VStack {
-                Text("Start Session")
+                Text("Home")
+                    .foregroundColor(.primary)
                     .fontWeight(.bold)
                     .font(.title)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -113,8 +122,9 @@ struct StartSessionView: View {
                 Button("Start Session", action: startSession)
                     .frame(width: 340)
                     .padding()
-                    .background(Color.mint)
-                    .foregroundStyle(Color.white)
+                    .background(Color(red: 0.25, green: 0.8, blue: 0.8))
+                    .foregroundStyle(Color.primary)
+                    .font(.headline)
                     .cornerRadius(20)
                     .buttonStyle(ScaleButtonStyle())
             }
@@ -125,4 +135,5 @@ struct StartSessionView: View {
 #Preview {
     StartSessionView(startSession: {})
         .environmentObject(NavigationViewModel())
+        .preferredColorScheme(.dark)
 }

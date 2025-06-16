@@ -26,10 +26,11 @@ struct StopwatchView: View {
         .font(.system(.title2))
         .padding(.horizontal, 14)
         .padding(.vertical, 6)
+        .foregroundStyle(Color.primary)
         .background(
             Capsule()
-                .fill(Color.white)
-                .shadow(color: Color.black.opacity(0.25), radius: 4, x: 0, y: 2)
+                .fill(Color(.systemBackground))
+                .shadow(color: Color.gray, radius: 4, x: 0, y: 2)
         )
         .padding(8)
     }

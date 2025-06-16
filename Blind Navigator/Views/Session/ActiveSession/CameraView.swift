@@ -12,25 +12,29 @@ struct CameraView: View {
     @State private var isRecording = false
     
     var body: some View {
-        if (sessionViewModel.cameraSession != nil) {
-            CameraPreview(session: sessionViewModel.cameraSession!)
-                .ignoresSafeArea()
-        }
-        
-        Button(isRecording ? "Stop Recording" : "Start Recording") {
-            Task {
-                if (isRecording) {
-                    sessionViewModel.stopCameraService()
-                } else {
-                    await sessionViewModel.startCameraService()
-                }
-                isRecording.toggle()
+        VStack {
+            if (sessionViewModel.cameraSession != nil) {
+                CameraPreview(session: sessionViewModel.cameraSession!)
+                    .ignoresSafeArea()
             }
+            Spacer()
+            
+            Label("Camera", systemImage: "camera.fill")
+            Button(isRecording ? "Stop Recording" : "Start Recording") {
+                Task {
+                    if (isRecording) {
+                        sessionViewModel.stopCameraService()
+                    } else {
+                        await sessionViewModel.startCameraService()
+                    }
+                    isRecording.toggle()
+                }
+            }
+            .padding()
+            .background(isRecording ? Color.red : Color("accent"))
+            .foregroundColor(.white)
+            .cornerRadius(8)
         }
-        .padding()
-        .background(isRecording ? Color.red : Color.green)
-        .foregroundColor(.white)
-        .cornerRadius(8)
     }
 }
 

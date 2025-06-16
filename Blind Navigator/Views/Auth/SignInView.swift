@@ -15,39 +15,32 @@ struct SignInView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                gradient: Gradient(colors: [.mint.opacity(0.2), .white]),
+                gradient: Gradient(colors: [Color("accent").opacity(0.7), Color(.systemBackground)]),
                 startPoint: .top,
-                endPoint: UnitPoint(x: 0, y: 0.4)
+                endPoint: UnitPoint(x: 0.5, y: 0.8)
             )
-            .edgesIgnoringSafeArea(.all)
-            
-            RadialGradient(
-                gradient: Gradient(colors: [
-                    Color.mint.opacity(0.4)
-                ]),
-                center: .top,
-                startRadius: 5,
-                endRadius: 400
-            )
-            .blendMode(.overlay)
             .edgesIgnoringSafeArea(.all)
             
             VStack {
+                Image("bn_logo-removebg")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 200)
                 Text("Log In")
                     .fontWeight(.bold)
                     .font(.title)
                     .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .foregroundStyle(Color.primary)
                     .padding()
                 
                 TextField("Email Address", text: $authViewModel.signInEmail)
                 .frame(width: 340)
                 .padding()
-                .background(Color.white)
-                .foregroundStyle(Color.black)
+                .background(Color.clear)
                 .cornerRadius(20)
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.black.opacity(0.6), lineWidth: 2)
+                        .stroke(Color.secondary, lineWidth: 2)
                 )
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
@@ -56,12 +49,11 @@ struct SignInView: View {
                 SecureField("Password", text: $authViewModel.signInPassword)
                 .frame(width: 340)
                 .padding()
-                .background(Color.white)
-                .foregroundStyle(Color.black)
+                .background(Color.clear)
                 .cornerRadius(20)
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.black.opacity(0.6), lineWidth: 2)
+                        .stroke(Color.secondary, lineWidth: 2)
                 )
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
@@ -79,8 +71,8 @@ struct SignInView: View {
                         .frame(width: 340)
                 }
                 .padding()
-                .background(Color.mint)
-                .foregroundStyle(Color.white)
+                .background(Color("accent"))
+                .foregroundStyle(Color.primary)
                 .cornerRadius(20)
                 
                 Button(action: authViewModel.resetPassword) {
@@ -96,6 +88,7 @@ struct SignInView: View {
                             .padding(.top, 10)
                             .multilineTextAlignment(.center)
                 }
+                Spacer()
             }
             .padding()
         }
@@ -105,6 +98,7 @@ struct SignInView: View {
 #Preview {
     SignInView()
         .environmentObject(AuthViewModel())
+        .preferredColorScheme(.dark)
 }
 
 

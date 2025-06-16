@@ -7,7 +7,7 @@
 
 import AVFoundation
 
-final class CameraService {
+final class CameraService/*: NSObject, AVCaptureFileOutputRecordingDelegate */{
     var captureSession: AVCaptureSession
     var isAuthorized: Bool {
         get async {
@@ -23,6 +23,9 @@ final class CameraService {
         }
     }
     var setupSuccess: Bool = false // Prevents crashing when running start/stopRecording() without a properly configured session
+    private var videoOutput = AVCaptureMovieFileOutput()
+    private var outputURL: URL?
+    private let formatter = DateFormatter()
 
     init () async {
         self.captureSession = AVCaptureSession()
@@ -31,6 +34,10 @@ final class CameraService {
             print("Error creating capture session")
             return
         }
+        
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSS"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone.current
         startSession()
     }
     
@@ -54,8 +61,14 @@ final class CameraService {
             print("Error setting videoDeviceInput")
             return false
         }
-        
         captureSession.addInput(videoDeviceInput)
+        
+        guard captureSession.canAddOutput(videoOutput) else {
+            print("Error setting camera video output")
+            return false
+        }
+        captureSession.addOutput(videoOutput)
+
         captureSession.commitConfiguration()
         return true
     }
@@ -65,14 +78,36 @@ final class CameraService {
     }
     
     func startSession() {
+        guard setupSuccess == true, !videoOutput.isRecording else {
+            print("CameraService failed setup or videoOutput is not recording")
+            return
+        }
+                
+        let date = Date()
+        let now = formatter.string(from: date)
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let outputURL = documents.appendingPathComponent("video-"+"\(now)")
+        
+        // videoOutput.startRecording(to: outputURL, recordingDelegate: self)
         captureSession.startRunning()
     }
     
     func stopSession() {
-        guard setupSuccess == true else {
-            print("No recording session")
+        guard setupSuccess == true, videoOutput.isRecording else {
+            print("No recording session to stop")
             return
         }
+        videoOutput.stopRecording()
         captureSession.stopRunning()
     }
 }
+
+/*extension CameraService: AVCaptureFileOutputRecordingDelegate {
+    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+        if let error = error {
+            print("Recording error: \(error.localizedDescription)")
+        } else {
+            print("Video saved to: \(outputFileURL)")
+        }
+    }
+}*/

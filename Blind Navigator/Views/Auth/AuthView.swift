@@ -12,36 +12,24 @@ struct AuthView: View {
         NavigationStack {
             ZStack {
                 LinearGradient(
-                    gradient: Gradient(colors: [.mint.opacity(0.2), .white]),
+                    gradient: Gradient(colors: [Color("accent").opacity(0.7), Color(.systemBackground).opacity(1)]),
                     startPoint: .top,
-                    endPoint: UnitPoint(x: 0, y: 0.4)
+                    endPoint: UnitPoint(x: 0.5, y: 0.8)
                 )
-                .edgesIgnoringSafeArea(.all)
-                
-                RadialGradient(
-                    gradient: Gradient(colors: [
-                        Color.mint.opacity(0.4)
-                    ]),
-                    center: .top,
-                    startRadius: 5,
-                    endRadius: 400
-                )
-                .blendMode(.overlay)
                 .edgesIgnoringSafeArea(.all)
                 
                 VStack {
+                    Image("bn_logo-removebg")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 200)
                     Text("Blind Navigator")
                         .fontWeight(.bold)
                         .font(.largeTitle)
-                    Text("Making navigation easier")
+                    Text("Improving accessibility, one step at a time.")
                         .font(.subheadline)
                         .opacity(0.7)
-                    Image("blindPersonColor")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 500, height: 500)
-                        .shadow(radius: 3)
-                    
+                                        
                     // Login
                     VStack {
                         NavigationLink(destination: SignUpView()) {
@@ -49,22 +37,22 @@ struct AuthView: View {
                                 .frame(width: 340)
                         }
                         .padding()
-                        .background(Color.white)
-                        .foregroundStyle(Color.black)
+                        .background(Color("accent"))
+                        .foregroundStyle(Color.primary)
                         .cornerRadius(20)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20)
-                                .stroke(Color.black.opacity(0.6), lineWidth: 2)
-                        )
-                        
+                                                
                         NavigationLink(destination: SignInView()) {
                             Label("Log In", systemImage: "arrow.right")
                                 .frame(width: 340)
                         }
                         .padding()
-                        .background(Color.mint)
-                        .foregroundStyle(Color.white)
+                        .background(Color.clear)
+                        .foregroundStyle(Color.primary)
                         .cornerRadius(20)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.primary, lineWidth: 2)
+                        )
                     }
                 }
             }
