@@ -25,7 +25,7 @@ final class StorageService: StorageServiceType {
     func createCSVFile(sessionId: String, headers: String) throws -> URL {
         let fileManager = FileManager.default
         let documents = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let fileURL = documents.appendingPathComponent("\(sessionId).csv")
+        let fileURL = documents.appendingPathComponent("data-"+"\(sessionId).csv")
         
         if !fileManager.fileExists(atPath: fileURL.path) {
             try headers.write(to: fileURL, atomically: true, encoding: .utf8)

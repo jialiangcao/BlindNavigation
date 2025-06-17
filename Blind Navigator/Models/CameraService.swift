@@ -27,14 +27,10 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
     var setupSuccess: Bool = false // Prevents crashing when running start/stopRecording() without a properly configured session
     private var videoOutput = AVCaptureMovieFileOutput()
     private var outputURL: URL?
-    private let formatter = DateFormatter()
 
     init(storageService: StorageServiceType) {
         self.storageService = storageService
         self.captureSession = AVCaptureSession()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSS"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone.current
     }
     
     deinit {
@@ -87,7 +83,7 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
         }
                 
         let date = Date()
-        let now = formatter.string(from: date)
+        let now = Constants.globalFormatter.string(from: date)
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let outputURL = documents.appendingPathComponent("video-"+"\(now)"+".mov")
         

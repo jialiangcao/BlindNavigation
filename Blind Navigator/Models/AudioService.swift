@@ -63,7 +63,6 @@ final class AudioService: NSObject, AVAudioRecorderDelegate {
     private let authViewModel: AuthViewModelType
     private let storageService: StorageServiceType
     
-    private var formatter: DateFormatter
     private let preferPredictions: Bool
     private var buffer: [Float] = []
     private var lastUpdateTime: TimeInterval = 0.0
@@ -92,12 +91,7 @@ final class AudioService: NSObject, AVAudioRecorderDelegate {
         self.recorder = recorder
         self.urlSession = urlSession
         self.userDefaults = userDefaults
-        
-        self.formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSS"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone.current
-        self.audioURL = "audio-"+formatter.string(from: Date())
+        self.audioURL = "audio-"+Constants.globalFormatter.string(from: Date())
         
         self.preferPredictions = userDefaults.bool(forKey: "preferPredictions")
         

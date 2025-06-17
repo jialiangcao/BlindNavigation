@@ -51,7 +51,18 @@ final class HistoryViewModel: ObservableObject {
 
         for url in selectedFiles {
             dispatchGroup.enter()
-            let remotePath = "BlindNavigator/\(email)/sessions/\(url.lastPathComponent)"
+            print(url)
+            let remotePath: String
+            if (url.pathExtension == "mov") {
+                remotePath = "BlindNavigator/\(email)/sessions/video/\(url.lastPathComponent)"
+            } else if (url.pathExtension == "m4a") {
+                remotePath = "BlindNavigator/\(email)/sessions/audio/\(url.lastPathComponent)"
+            } else if (url.pathExtension == "csv") {
+                remotePath = "BlindNavigator/\(email)/sessions/csv/\(url.lastPathComponent)"
+            } else {
+                remotePath = "BlindNavigator/\(email)/sessions/other/\(url.lastPathComponent)"
+            }
+
             storageService.uploadFile(localFileURL: url, remotePath: remotePath) { result in
                 switch result {
                 case .failure(_):

@@ -26,7 +26,6 @@ final class SessionViewModel: NSObject, ObservableObject {
     
     private var fileURL: URL?
     private var sessionStartTime: TimeInterval = 0
-    private let formatter: DateFormatter
     
     override init() {
         self.authViewModel = AuthViewModel()
@@ -35,11 +34,6 @@ final class SessionViewModel: NSObject, ObservableObject {
         self.predictionService = PredictionService()
         self.audioService = AudioService(authViewModel: authViewModel, storageService: storageService)
 
-        self.formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSS"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone.current
-        
         super.init()
         locationService.delegate = self
         audioService.delegate = self
@@ -56,7 +50,7 @@ final class SessionViewModel: NSObject, ObservableObject {
         do {
             let headers = "timestamp,elapsed,latitude,longitude,prediction\n"
             let date = Date()
-            let now = formatter.string(from: date)
+            let now = Constants.globalFormatter.string(from: date)
             fileURL = try storageService.createCSVFile(sessionId: "\(now)", headers: headers)
         } catch {
             print("Failed to create CSV file: \(error)")
@@ -101,7 +95,7 @@ final class SessionViewModel: NSObject, ObservableObject {
             }
         
             let date = Date()
-            let now = formatter.string(from: date)
+        let now = Constants.globalFormatter.string(from: date)
             let elapsed = Date().timeIntervalSince1970 - sessionStartTime
         
             let latitude = userLocation.latitude
