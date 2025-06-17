@@ -71,19 +71,28 @@ final class SessionViewModel: NSObject, ObservableObject {
         audioService.stopRecording()
         storageService.closeFile()
         storageService.saveFileOnDevice(originalURL: fileURL!)
-        stopCameraService()
     }
     
     func startCameraService() async {
-        self.cameraService = await CameraService()
+        self.cameraService = CameraService(storageService: storageService)
+        guard cameraService != nil else {
+            print("SessionViewModel: Error creating cameraService")
+            return
+        }
+        
+        await cameraService!.createCaptureSession()
         // Needs to run on the main thread because cameraSession is @Published
         await MainActor.run {
-            self.cameraSession = self.cameraService?.getCaptureSession()
+            cameraSession = cameraService!.getCaptureSession()
         }
     }
     
-    func stopCameraService() {
-        self.cameraService?.stopSession()
+    func startRecording() {
+        cameraService?.startRecording()
+    }
+    
+    func stopRecording() {
+        cameraService?.stopRecording()
     }
     
     private func logCurrentData() {

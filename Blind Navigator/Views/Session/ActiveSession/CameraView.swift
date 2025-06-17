@@ -17,15 +17,18 @@ struct CameraView: View {
                 CameraPreview(session: sessionViewModel.cameraSession!)
                     .ignoresSafeArea()
             }
+            
             Spacer()
             
-            Label("Camera", systemImage: "camera.fill")
             Button(isRecording ? "Stop Recording" : "Start Recording") {
                 Task {
                     if (isRecording) {
-                        sessionViewModel.stopCameraService()
+                        sessionViewModel.stopRecording()
                     } else {
-                        await sessionViewModel.startCameraService()
+                        if (sessionViewModel.cameraSession == nil) {
+                            await sessionViewModel.startCameraService()
+                        }
+                        sessionViewModel.startRecording()
                     }
                     isRecording.toggle()
                 }
@@ -35,6 +38,7 @@ struct CameraView: View {
             .foregroundColor(.white)
             .cornerRadius(8)
         }
+        .padding(.bottom, 50)
     }
 }
 
