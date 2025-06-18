@@ -14,6 +14,8 @@ struct StartSessionView: View {
     @State private var showingSettings = false
     @State private var showingHistory = false
     @AppStorage("preferPredictions") private var preferPredictions = false
+    @AppStorage("canetip") private var canetip = "Metal"
+    @AppStorage("weather") private var weather = "Clear"
     
     private var settingsSections: [SettingsSection] {
             [
@@ -23,6 +25,18 @@ struct StartSessionView: View {
                         iconName: "waveform",
                         iconColor: .blue,
                         type: .toggle($preferPredictions)
+                    ),
+                    SettingItem(
+                        title: "Cane Tip Material",
+                        iconName: "pencil.tip",
+                        iconColor: .green,
+                        type: .picker($canetip, options: ["Metal", "Ceramic"])
+                    ),
+                    SettingItem(
+                        title: "Weather Conditions",
+                        iconName: "sun.max.fill",
+                        iconColor: .yellow,
+                        type: .picker($weather, options: ["Clear", "Rainy", "Windy"])
                     )
                 ]),
                 SettingsSection(title: "Account", items: [
@@ -33,7 +47,6 @@ struct StartSessionView: View {
                         type: .action(signOut)
                     )
                 ]),
-
             ]
         }
     

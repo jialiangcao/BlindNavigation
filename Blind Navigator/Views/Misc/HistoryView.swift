@@ -13,6 +13,18 @@ struct HistoryView: View {
     var body: some View {
         NavigationView {
             ZStack {
+                VStack {
+                    if historyViewModel.isLoading == true {
+                        ProgressView() {
+                            Text("Uploading...")
+                        }
+                        .padding()
+                        .background(Color.gray.opacity(0.4))
+                        .cornerRadius(10)
+                    }
+                }
+                .zIndex(1)
+
                 if historyViewModel.uploadStatus != nil {
                     VStack {
                         if historyViewModel.uploadStatus == true {

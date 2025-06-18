@@ -11,6 +11,7 @@ final class HistoryViewModel: ObservableObject {
     @Published var history: [URL] = []
     @Published var selectedFiles: Set<URL> = []
     @Published var uploadStatus: Bool?
+    @Published var isLoading: Bool = false
     
     private let storageService: StorageServiceType
     private let authViewModel: AuthViewModelType
@@ -45,6 +46,8 @@ final class HistoryViewModel: ObservableObject {
             uploadStatus = false
             return
         }
+        
+        isLoading = true
         
         let dispatchGroup = DispatchGroup()
         var uploadFailed = false
@@ -81,6 +84,7 @@ final class HistoryViewModel: ObservableObject {
             } else {
                 self.uploadStatus = true
             }
+            self.isLoading = false
         }
     }
 }

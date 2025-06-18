@@ -20,6 +20,7 @@ enum SettingType {
     case toggle(Binding<Bool>)
     case navigation(() -> AnyView)
     case action(() -> Void)
+    case picker(Binding<String>, options: [String])
 }
 
 struct SettingsSection: Identifiable {
@@ -70,6 +71,14 @@ struct SettingsRowView: View {
             Image(systemName: "chevron.right")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(Color(.systemGray4))
+        case .picker(let binding, let options):
+            Picker(selection: binding, label: Label(item.title, systemImage: item.iconName)
+                .foregroundColor(item.iconColor)
+            ) {
+                ForEach(options, id: \.self) { option in
+                    Text(option).tag(option)
+                }
+            }
         }
     }
     
@@ -142,6 +151,7 @@ struct SettingsView: View {
 struct SettingsView_Previews: PreviewProvider {
     @State static var notificationsEnabled = true
     @State static var darkModeEnabled = false
+    @State static var pickerOption = "Left"
     
     static var previews: some View {
         SettingsView(sections: [
@@ -152,6 +162,12 @@ struct SettingsView_Previews: PreviewProvider {
                     iconColor: .blue,
                     type: .navigation({ AnyView(Text("Personal Info View")) })
                 ),
+                SettingItem(
+                    title: "Picker",
+                    iconName: "square.and.arrow.up",
+                    iconColor: .orange,
+                    type: .picker($pickerOption, options: ["Left", "Right", "Up", "Down"])
+                )
             ]),
             
             SettingsSection(title: "Preferences", items: [
