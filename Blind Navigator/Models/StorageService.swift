@@ -21,6 +21,8 @@ protocol StorageServiceType {
 final class StorageService: StorageServiceType {
     private var fileHandle: FileHandle?
     private let historyKey = "sessionFileHistory"
+    private let canetip = UserDefaults.standard.value(forKey: "canetip") as? String ?? ""
+    private let weather = UserDefaults.standard.value(forKey: "weather") as? String ?? ""
     
     func createCSVFile(sessionId: String, headers: String) throws -> URL {
         let fileManager = FileManager.default
@@ -52,7 +54,14 @@ final class StorageService: StorageServiceType {
     
     func uploadFile(localFileURL: URL, remotePath: String, completion: @escaping (Result<URL, Error>) -> Void) {
         let storageRef = Storage.storage().reference(withPath: remotePath)
-        storageRef.putFile(from: localFileURL, metadata: nil) { metadata, error in
+        
+        let metadata = StorageMetadata()
+        metadata.customMetadata = [
+            "canetip": canetip,
+            "weather": weather
+        ]
+
+        storageRef.putFile(from: localFileURL, metadata: metadata) { metadata, error in
             if let error = error {
                 print(error)
                 completion(.failure(error))
