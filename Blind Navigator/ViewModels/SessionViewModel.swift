@@ -16,28 +16,39 @@ final class SessionViewModel: NSObject, ObservableObject {
     @Published var decibelLevel: Int?
     @Published var prediction: String?
     @Published var cameraSession: AVCaptureSession?
+    @Published var accelerometerValues: SIMD3<Float>?
     
     private let authViewModel: AuthViewModelType
     private let storageService: StorageServiceType
     private let locationService: LocationService
-    private let audioService: AudioService
+    private var audioService: AudioService
     private let predictionService: PredictionService
     private var cameraService: CameraService?
+    private var metaWearViewModel: MetaWearViewModel
     
     private var fileURL: URL?
     private var sessionStartTime: TimeInterval = 0
     
-    override init() {
-        self.authViewModel = AuthViewModel()
-        self.storageService = StorageService()
-        self.locationService = LocationService()
-        self.predictionService = PredictionService()
+    init(
+        metaWearViewModel: MetaWearViewModel,
+        authViewModel: AuthViewModelType = AuthViewModel(),
+        storageService: StorageServiceType = StorageService(),
+        locationService: LocationService = LocationService(),
+        predictionService: PredictionService = PredictionService(),
+    ) {
+        self.metaWearViewModel = metaWearViewModel
+        self.authViewModel = authViewModel
+        self.storageService = storageService
+        self.locationService = locationService
+        self.predictionService = predictionService
         self.audioService = AudioService(authViewModel: authViewModel, storageService: storageService)
 
         super.init()
-        locationService.delegate = self
-        audioService.delegate = self
-        predictionService.delegate = self
+
+        self.metaWearViewModel.delegate = self
+        self.locationService.delegate = self
+        self.audioService.delegate = self
+        self.predictionService.delegate = self
         startSession()
     }
     
@@ -48,7 +59,7 @@ final class SessionViewModel: NSObject, ObservableObject {
     func startSession() {
         sessionStartTime = Date().timeIntervalSince1970
         do {
-            let headers = "timestamp,elapsed,latitude,longitude,prediction\n"
+            let headers = "Timestamp,Elapsed Time,x-coordinate,y-coordinate,z-coordinate,latitude,longitude,prediction\n"
             let date = Date()
             let now = Constants.globalFormatter.string(from: date)
             fileURL = try storageService.createCSVFile(sessionId: "\(now)", headers: headers)
@@ -90,26 +101,26 @@ final class SessionViewModel: NSObject, ObservableObject {
     }
     
     private func logCurrentData() {
-            guard let fileURL = fileURL, let userLocation = userLocation else {
-                return
-            }
+        guard let fileURL = fileURL, let userLocation = userLocation else {
+            return
+        }
         
-            let date = Date()
+        let date = Date()
         let now = Constants.globalFormatter.string(from: date)
-            let elapsed = Date().timeIntervalSince1970 - sessionStartTime
+        let elapsed = Date().timeIntervalSince1970 - sessionStartTime
         
-            let latitude = userLocation.latitude
-            let longitude = userLocation.longitude
-            
-            let predictionStr = prediction ?? "Disabled"
-            
-            let row = "\(now),\(elapsed),\(latitude),\(longitude),\(predictionStr)\n"
-            
-            do {
-                try storageService.append(row: row, to: fileURL)
-            } catch {
-                print("Failed to append row to CSV: \(error)")
-            }
+        let latitude = userLocation.latitude
+        let longitude = userLocation.longitude
+        
+        let predictionStr = prediction ?? "Disabled"
+        
+        let row = "\(now),\(elapsed),\(accelerometerValues!.x),\(accelerometerValues!.y),\(accelerometerValues!.z),\(latitude),\(longitude),\(predictionStr)\n"
+        
+        do {
+            try storageService.append(row: row, to: fileURL)
+        } catch {
+            print("Failed to append row to CSV: \(error)")
+        }
     }
     
 }
@@ -119,7 +130,6 @@ extension SessionViewModel: LocationServiceDelegate {
         userLocation = location.coordinate
         userPath.append(location.coordinate)
         locationAccuracy = accuracy
-        self.logCurrentData()
     }
 }
 
@@ -127,7 +137,7 @@ extension SessionViewModel: AudioServiceDelegate {
     func didProcessAudio(_ spectrogram: [[[Double]]]) {
         self.predictionService.processSpectrogram(spectrogram)
     }
-        
+    
     func didUpdateDecibelLevel(_ decibels: Int) {
         DispatchQueue.main.async {
             self.decibelLevel = decibels
@@ -140,5 +150,12 @@ extension SessionViewModel: PredictionServiceDelegate {
         DispatchQueue.main.async {
             self.prediction = prediction
         }
+    }
+}
+
+extension SessionViewModel: MetaWearDelegate {
+    func didUpdateAccelerometerData(_ values: SIMD3<Float>) {
+        self.accelerometerValues = values
+        self.logCurrentData()
     }
 }

@@ -69,6 +69,6 @@ struct StatisticsView: View {
 }
 
 #Preview {
-    StatisticsView(sessionViewModel: SessionViewModel(), endSession: {})
+    StatisticsView(sessionViewModel: SessionViewModel(metaWearViewModel: MetaWearViewModel()), endSession: {})
         .preferredColorScheme(.dark)
 }

@@ -42,5 +42,5 @@ struct ActiveSessionView: View {
 }
 
 #Preview {
-    ActiveSessionView(sessionViewModel: SessionViewModel(), endSession: {})
+    ActiveSessionView(sessionViewModel: SessionViewModel(metaWearViewModel: MetaWearViewModel()), endSession: {})
 }

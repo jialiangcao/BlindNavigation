@@ -43,5 +43,5 @@ struct CameraView: View {
 }
 
 #Preview {
-    CameraView(sessionViewModel: SessionViewModel())
+    CameraView(sessionViewModel: SessionViewModel(metaWearViewModel: MetaWearViewModel()))
 }

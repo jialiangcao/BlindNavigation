@@ -38,5 +38,5 @@ struct MapView: View {
 }
 
 #Preview {
-    MapView(sessionViewModel: SessionViewModel())
+    MapView(sessionViewModel: SessionViewModel(metaWearViewModel: MetaWearViewModel()))
 }

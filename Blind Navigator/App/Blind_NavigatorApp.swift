@@ -16,12 +16,14 @@ struct Blind_NavigatorApp: App {
     
     @StateObject private var authViewModel = AuthViewModel()
     @StateObject private var navigationViewModel = NavigationViewModel()
+    @StateObject private var metaWearViewModel = MetaWearViewModel()
     
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(authViewModel)
                 .environmentObject(navigationViewModel)
+                .environmentObject(metaWearViewModel)
         }
     }
 }

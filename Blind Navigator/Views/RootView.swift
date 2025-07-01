@@ -6,10 +6,13 @@
 //
 
 import SwiftUI
+import MetaWear
+import MetaWearSync
 
 struct RootView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var navViewModel: NavigationViewModel
+    @EnvironmentObject var metaWearViewModel: MetaWearViewModel
 
     var body: some View {
         VStack {
@@ -20,9 +23,10 @@ struct RootView: View {
                 StartSessionView(startSession: {
                     navViewModel.startSession()
                 })
+                DeviceListView(metaWearViewModel: metaWearViewModel)
             case .activeSession:
                 ActiveSessionView(
-                    sessionViewModel: SessionViewModel(),
+                    sessionViewModel: SessionViewModel(metaWearViewModel: metaWearViewModel),
                     endSession: {
                         navViewModel.endSession()
                     }

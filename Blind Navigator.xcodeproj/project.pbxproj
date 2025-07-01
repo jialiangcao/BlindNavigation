@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4E28FFF02E142E7A00E4A037 /* MetaWear in Frameworks */ = {isa = PBXBuildFile; productRef = 4E28FFEF2E142E7A00E4A037 /* MetaWear */; };
+		4E28FFF22E142E7A00E4A037 /* MetaWearCpp in Frameworks */ = {isa = PBXBuildFile; productRef = 4E28FFF12E142E7A00E4A037 /* MetaWearCpp */; };
+		4E28FFF42E142E7A00E4A037 /* MetaWearFirmware in Frameworks */ = {isa = PBXBuildFile; productRef = 4E28FFF32E142E7A00E4A037 /* MetaWearFirmware */; };
+		4E28FFF62E142E7A00E4A037 /* MetaWearSync in Frameworks */ = {isa = PBXBuildFile; productRef = 4E28FFF52E142E7A00E4A037 /* MetaWearSync */; };
 		4E5A971F2DEF520E0003924F /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 4E5A971E2DEF520E0003924F /* FirebaseStorage */; };
 		4EDC6A042DBDC9A900683016 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4EDC6A032DBDC9A900683016 /* FirebaseAuth */; };
 /* End PBXBuildFile section */
@@ -57,7 +61,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E28FFF22E142E7A00E4A037 /* MetaWearCpp in Frameworks */,
 				4EDC6A042DBDC9A900683016 /* FirebaseAuth in Frameworks */,
+				4E28FFF42E142E7A00E4A037 /* MetaWearFirmware in Frameworks */,
+				4E28FFF62E142E7A00E4A037 /* MetaWearSync in Frameworks */,
+				4E28FFF02E142E7A00E4A037 /* MetaWear in Frameworks */,
 				4E5A971F2DEF520E0003924F /* FirebaseStorage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -121,6 +129,10 @@
 			packageProductDependencies = (
 				4EDC6A032DBDC9A900683016 /* FirebaseAuth */,
 				4E5A971E2DEF520E0003924F /* FirebaseStorage */,
+				4E28FFEF2E142E7A00E4A037 /* MetaWear */,
+				4E28FFF12E142E7A00E4A037 /* MetaWearCpp */,
+				4E28FFF32E142E7A00E4A037 /* MetaWearFirmware */,
+				4E28FFF52E142E7A00E4A037 /* MetaWearSync */,
 			);
 			productName = "Blind Navigator";
 			productReference = 4EE2160E2DBCABE10083CE7A /* Blind Navigator.app */;
@@ -206,6 +218,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				4EDC6A022DBDC9A900683016 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				4E28FFEE2E142E7A00E4A037 /* XCRemoteSwiftPackageReference "MetaWear-Swift-Combine-SDK" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4EE2160F2DBCABE10083CE7A /* Products */;
@@ -413,6 +426,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blind-Navigator-Info.plist";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app uses Bluetooth to connect to sensors";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "This app uses Bluetooth to communicate with nearby devices";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses your camera to record video";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app uses your location to provide navigation";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses your microphone to record audio";
@@ -447,6 +462,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blind-Navigator-Info.plist";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app uses Bluetooth to connect to sensors";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "This app uses Bluetooth to communicate with nearby devices";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses your camera to record video";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app uses your location to provide navigation";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses your microphone to record audio";
@@ -584,6 +601,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		4E28FFEE2E142E7A00E4A037 /* XCRemoteSwiftPackageReference "MetaWear-Swift-Combine-SDK" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mbientlab/MetaWear-Swift-Combine-SDK";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.5.3;
+			};
+		};
 		4EDC6A022DBDC9A900683016 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -595,6 +620,26 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		4E28FFEF2E142E7A00E4A037 /* MetaWear */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E28FFEE2E142E7A00E4A037 /* XCRemoteSwiftPackageReference "MetaWear-Swift-Combine-SDK" */;
+			productName = MetaWear;
+		};
+		4E28FFF12E142E7A00E4A037 /* MetaWearCpp */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E28FFEE2E142E7A00E4A037 /* XCRemoteSwiftPackageReference "MetaWear-Swift-Combine-SDK" */;
+			productName = MetaWearCpp;
+		};
+		4E28FFF32E142E7A00E4A037 /* MetaWearFirmware */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E28FFEE2E142E7A00E4A037 /* XCRemoteSwiftPackageReference "MetaWear-Swift-Combine-SDK" */;
+			productName = MetaWearFirmware;
+		};
+		4E28FFF52E142E7A00E4A037 /* MetaWearSync */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E28FFEE2E142E7A00E4A037 /* XCRemoteSwiftPackageReference "MetaWear-Swift-Combine-SDK" */;
+			productName = MetaWearSync;
+		};
 		4E5A971E2DEF520E0003924F /* FirebaseStorage */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4EDC6A022DBDC9A900683016 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
