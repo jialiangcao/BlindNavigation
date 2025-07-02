@@ -8,8 +8,6 @@ import SwiftUI
 
 struct ActiveSessionView: View {
     @ObservedObject var sessionViewModel: SessionViewModel
-    let endSession: () -> Void
-    
     @State private var selectedTab = 0
     
     var body: some View {
@@ -26,7 +24,7 @@ struct ActiveSessionView: View {
             }
             .tag(1)
             
-            StatisticsView(sessionViewModel: sessionViewModel, endSession: endSession)
+            StatisticsView(sessionViewModel: sessionViewModel)
             .tabItem {
                 Label("Session", systemImage: "gearshape.fill")
             }
@@ -42,5 +40,6 @@ struct ActiveSessionView: View {
 }
 
 #Preview {
-    ActiveSessionView(sessionViewModel: SessionViewModel(metaWearViewModel: MetaWearViewModel()), endSession: {})
+    ActiveSessionView(sessionViewModel: SessionViewModel(metaWearViewModel: MetaWearViewModel()))
+        .environmentObject(NavigationViewModel())
 }

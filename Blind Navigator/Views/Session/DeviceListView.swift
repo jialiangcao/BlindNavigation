@@ -1,5 +1,5 @@
 //
-//  DeviceList.swift
+//  DeviceListView.swift
 //  Blind Navigator
 //
 //  Created by Jialiang Cao on 7/1/25.
@@ -9,55 +9,134 @@ import SwiftUI
 import MetaWear
 
 struct DeviceListView: View {
+    @EnvironmentObject private var navigationViewModel: NavigationViewModel
     @ObservedObject var metaWearViewModel: MetaWearViewModel
     @StateObject private var deviceList = DeviceListUseCase()
     
     var body: some View {
-        NavigationView {
-            if (deviceList.discoveredDevices.isEmpty) {
-                Text("No MetaWear devices found, please ensure you have enabled Bluetooth and the MetaWear device is powered on.")
-            } else {
-                List(Array(deviceList.discoveredDevices), id: \.localBluetoothID) { device in
-                    Button {
-                        deviceList.selectDevice(device)
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(device.name)
-                                    .font(.headline)
-                                Text(device.localBluetoothID.uuidString)
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            }
-                            Spacer()
-                            if device.localBluetoothID == deviceList.selectedDevice?.localBluetoothID {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.blue)
+        ZStack {
+            Color(.systemGroupedBackground)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // Title
+                Text("Select a MetaWear Device")
+                    .fontWeight(.bold)
+                    .font(.largeTitle)
+                    .padding()
+                
+                if deviceList.discoveredDevices.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        Text("No Devices Found")
+                            .font(.title3.weight(.semibold))
+                        Text("Please ensure Bluetooth is enabled and your MetaWear device is powered on.")
+                            .font(.body)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
+                    }
+                    .padding(.top, 60)
+                    .transition(.opacity)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            ForEach(Array(deviceList.discoveredDevices), id: \.localBluetoothID) { device in
+                                DeviceRow(
+                                    device: device,
+                                    isSelected: device.localBluetoothID == deviceList.selectedDevice?.localBluetoothID
+                                )
+                                .onTapGesture {
+                                    withAnimation(.spring()) {
+                                        deviceList.selectDevice(device)
+                                    }
+                                }
                             }
                         }
-                        Button("Confirm", action: {
-                            print("Confirmed")
-                            if let selected = deviceList.selectedDevice {
-                                metaWearViewModel.setDevice(selected)
-                                metaWearViewModel.setupDevice()
-                                metaWearViewModel.connectDevice()
-                            }
-                        })
-                        
+                        .padding()
                     }
+                    .transition(.opacity)
                 }
+                
+                Spacer()
+            }
+            
+            VStack {
+                Spacer()
+                Button(action: {
+                    if let selected = deviceList.selectedDevice {
+                        metaWearViewModel.setDevice(selected)
+                        metaWearViewModel.setupDevice()
+                        metaWearViewModel.connectDevice()
+                    }
+                    navigationViewModel.setStartSessionView()
+                }) {
+                    Text("Confirm")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(16)
+                        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 32)
             }
         }
-        .navigationTitle("MetaWear Devices")
-        .onAppear {
-            deviceList.onAppear()
+        .onAppear { deviceList.onAppear() }
+        .onDisappear { deviceList.onDisappear() }
+        .animation(.easeInOut, value: deviceList.discoveredDevices)
+    }
+}
+
+struct DeviceRow: View {
+    let device: MetaWear
+    let isSelected: Bool
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(Color.accentColor.opacity(0.12))
+                    .frame(width: 44, height: 44)
+                Image(systemName: "dot.radiowaves.left.and.right")
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundColor(.accentColor)
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(device.name)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                Text(device.localBluetoothID.uuidString)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            if isSelected {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.accentColor)
+                    .imageScale(.large)
+            }
         }
-        .onDisappear {
-            deviceList.onDisappear()
-        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(.secondarySystemGroupedBackground))
+                .shadow(color: isSelected ? Color.accentColor.opacity(0.15) : Color.clear, radius: 8, x: 0, y: 2)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+        )
+        .animation(.spring(), value: isSelected)
     }
 }
 
 #Preview {
     DeviceListView(metaWearViewModel: MetaWearViewModel())
+        .environmentObject(NavigationViewModel())
 }

@@ -12,24 +12,25 @@ enum AppScreen {
     case auth
     case startSession
     case activeSession
+    case deviceList
 }
 
 final class NavigationViewModel: ObservableObject {
     @Published var currentScreen: AppScreen = .auth
     
-    func startSession() {
+    func setActiveSessionView() {
         currentScreen = .activeSession
     }
     
-    func endSession() {
+    func setStartSessionView() {
         currentScreen = .startSession
     }
 
-    func signedIn() {
-        currentScreen = .startSession
-    }
-
-    func signedOut() {
+    func setAuthView() {
         currentScreen = .auth
+    }
+    
+    func setDeviceListView() {
+        currentScreen = .deviceList
     }
 }

@@ -13,31 +13,24 @@ struct RootView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var navViewModel: NavigationViewModel
     @EnvironmentObject var metaWearViewModel: MetaWearViewModel
-
+    
     var body: some View {
         VStack {
             switch navViewModel.currentScreen {
             case .auth:
                 AuthView()
             case .startSession:
-                StartSessionView(startSession: {
-                    navViewModel.startSession()
-                })
-                DeviceListView(metaWearViewModel: metaWearViewModel)
+                StartSessionView()
             case .activeSession:
-                ActiveSessionView(
-                    sessionViewModel: SessionViewModel(metaWearViewModel: metaWearViewModel),
-                    endSession: {
-                        navViewModel.endSession()
-                    }
-                )
+                ActiveSessionView(sessionViewModel: SessionViewModel(metaWearViewModel: metaWearViewModel))
                 .overlay(
                     StopwatchView()
-                    .padding(), alignment: .top
+                        .padding(), alignment: .top
                 )
+            case .deviceList:
+                DeviceListView(metaWearViewModel: metaWearViewModel)
             }
         }
-        // Janky signed session fix
         .onAppear {
             if authViewModel.user != nil {
                 navViewModel.currentScreen = .startSession

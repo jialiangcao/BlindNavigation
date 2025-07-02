@@ -41,6 +41,7 @@ final class MetaWearViewModel: ObservableObject {
             .sink(receiveCompletion: { completion in
                 print(completion)
             }, receiveValue: { [weak self] data in
+                print(data)
                 self?.delegate?.didUpdateAccelerometerData(data.value)
             })
             .store(in: &cancellables)

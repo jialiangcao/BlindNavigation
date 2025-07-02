@@ -62,7 +62,7 @@ struct SignInView: View {
                 
                 Button(action: { authViewModel.signIn { success in
                         if success {
-                            navigationViewModel.signedIn()
+                            navigationViewModel.setStartSessionView()
                         }
                     }
                 }

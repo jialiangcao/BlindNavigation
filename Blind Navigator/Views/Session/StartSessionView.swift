@@ -14,8 +14,8 @@ struct StartSessionView: View {
     @State private var showingSettings = false
     @State private var showingHistory = false
     @AppStorage("preferPredictions") private var preferPredictions = false
-    @AppStorage("canetip") private var canetip = "Metal"
-    @AppStorage("weather") private var weather = "Clear"
+    @AppStorage("canetip") private var canetip = "Unset"
+    @AppStorage("weather") private var weather = "Unset"
     
     private var settingsSections: [SettingsSection] {
             [
@@ -30,13 +30,21 @@ struct StartSessionView: View {
                         title: "Cane Tip Material",
                         iconName: "pencil.tip",
                         iconColor: .green,
-                        type: .picker($canetip, options: ["Metal", "Ceramic"])
+                        type: .picker($canetip, options: ["Metal", "Ceramic", "Plastic"])
                     ),
                     SettingItem(
                         title: "Weather Conditions",
                         iconName: "sun.max.fill",
                         iconColor: .yellow,
                         type: .picker($weather, options: ["Clear", "Rainy", "Windy"])
+                    )
+                ]),
+                SettingsSection(title: "MetaWear", items: [
+                    SettingItem(
+                        title: "Manage Devices",
+                        iconName: "antenna.radiowaves.left.and.right",
+                        iconColor: .blue,
+                        type: .action(promptMetaWear)
                     )
                 ]),
                 SettingsSection(title: "Account", items: [
@@ -50,16 +58,21 @@ struct StartSessionView: View {
             ]
         }
     
-    // For navigation
-    let startSession: () -> Void
+    private func startSession() {
+        navigationViewModel.setActiveSessionView()
+    }
     
     private func signOut() {
         do {
             try Auth.auth().signOut()
-            navigationViewModel.signedOut()
+            navigationViewModel.setAuthView()
         } catch let signOutError as NSError {
             print("Error signing out: \(signOutError)")
         }
+    }
+    
+    private func promptMetaWear() {
+        navigationViewModel.setDeviceListView()
     }
     
     var body: some View {
@@ -127,7 +140,7 @@ struct StartSessionView: View {
                 Text("Home")
                     .foregroundColor(.primary)
                     .fontWeight(.bold)
-                    .font(.title)
+                    .font(.largeTitle)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding()
                 
@@ -146,7 +159,7 @@ struct StartSessionView: View {
 }
 
 #Preview {
-    StartSessionView(startSession: {})
+    StartSessionView()
         .environmentObject(NavigationViewModel())
         .preferredColorScheme(.dark)
 }

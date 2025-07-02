@@ -12,33 +12,62 @@ struct CameraView: View {
     @State private var isRecording = false
     
     var body: some View {
-        VStack {
-            if (sessionViewModel.cameraSession != nil) {
-                CameraPreview(session: sessionViewModel.cameraSession!)
+        ZStack {
+            // Camera Preview
+            if let session = sessionViewModel.cameraSession {
+                CameraPreview(session: session)
                     .ignoresSafeArea()
-            }
-            
-            Spacer()
-            
-            Button(isRecording ? "Stop Recording" : "Start Recording") {
-                Task {
-                    if (isRecording) {
-                        sessionViewModel.stopRecording()
-                    } else {
-                        if (sessionViewModel.cameraSession == nil) {
-                            await sessionViewModel.startCameraService()
-                        }
-                        sessionViewModel.startRecording()
-                    }
-                    isRecording.toggle()
+            } else {
+                Color(.systemGroupedBackground)
+                    .ignoresSafeArea()
+                VStack(spacing: 16) {
+                    Image(systemName: "camera")
+                        .font(.system(size: 48))
+                        .foregroundColor(.secondary)
+                    Text("Camera Unavailable")
+                        .font(.title3.weight(.semibold))
+                    Text("Recording is off or camera permissions are disabled.")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
                 }
             }
-            .padding()
-            .background(isRecording ? Color.red : Color("accent"))
-            .foregroundColor(.white)
-            .cornerRadius(8)
+            
+            VStack {
+                Spacer()
+                Button(action: {
+                    Task {
+                        if isRecording {
+                            sessionViewModel.stopRecording()
+                        } else {
+                            if sessionViewModel.cameraSession == nil {
+                                await sessionViewModel.startCameraService()
+                            }
+                            sessionViewModel.startRecording()
+                        }
+                        isRecording.toggle()
+                    }
+                }) {
+                    HStack(spacing: 12) {
+                        Image(systemName: isRecording ? "stop.circle.fill" : "record.circle.fill")
+                            .font(.system(size: 32, weight: .bold))
+                        Text(isRecording ? "Stop Recording" : "Start Recording")
+                            .font(.headline)
+                            .bold()
+                    }
+                    .padding(.vertical, 18)
+                    .frame(maxWidth: .infinity)
+                    .background(isRecording ? Color.red : Color("accent"))
+                    .foregroundColor(.white)
+                    .cornerRadius(16)
+                    .shadow(color: Color.black.opacity(0.12), radius: 8, x: 0, y: 4)
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 36)
+            }
         }
-        .padding(.bottom, 50)
+        .animation(.easeInOut, value: isRecording)
     }
 }
 

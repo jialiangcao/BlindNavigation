@@ -1,5 +1,5 @@
 //
-//  DeviceList.swift
+//  DeviceListUseCase.swift
 //  Blind Navigator
 //
 //  Created by Jialiang Cao on 7/1/25.
