@@ -15,7 +15,7 @@ protocol MetaWearDelegate: AnyObject {
 
 final class MetaWearViewModel: ObservableObject {
     weak var delegate: MetaWearDelegate?
-    private var metaWear: MetaWear?
+    var metaWear: MetaWear?
     private var cancellables = Set<AnyCancellable>()
 
     init() {
@@ -41,7 +41,6 @@ final class MetaWearViewModel: ObservableObject {
             .sink(receiveCompletion: { completion in
                 print(completion)
             }, receiveValue: { [weak self] data in
-                print(data)
                 self?.delegate?.didUpdateAccelerometerData(data.value)
             })
             .store(in: &cancellables)
@@ -53,8 +52,6 @@ final class MetaWearViewModel: ObservableObject {
             return
         }
 
-        print(metaWear)
-        print("connected")
         metaWear.connect()
     }
     

@@ -69,7 +69,6 @@ struct DeviceListView: View {
                     if let selected = deviceList.selectedDevice {
                         metaWearViewModel.setDevice(selected)
                         metaWearViewModel.setupDevice()
-                        metaWearViewModel.connectDevice()
                     }
                     navigationViewModel.setStartSessionView()
                 }) {

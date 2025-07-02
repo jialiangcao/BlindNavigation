@@ -9,7 +9,7 @@ import CoreLocation
 import UIKit
 
 protocol LocationServiceDelegate: AnyObject {
-    func didUpdateLocation(_ location: CLLocation, accuracy: CLLocationAccuracy)
+    func didUpdateLocation(_ location: CLLocation, accuracy: Int)
 }
 
 // Abstracted CLLocationManager protocol for dependency injection
@@ -48,6 +48,6 @@ final class LocationService: NSObject {
 extension LocationService: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let lastLocation = locations.last else { return }
-        delegate?.didUpdateLocation(lastLocation, accuracy: lastLocation.horizontalAccuracy)
+        delegate?.didUpdateLocation(lastLocation, accuracy: Int(lastLocation.horizontalAccuracy))
     }
 }

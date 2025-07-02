@@ -12,11 +12,12 @@ import AVFoundation
 final class SessionViewModel: NSObject, ObservableObject {
     @Published var userLocation: CLLocationCoordinate2D?
     @Published var userPath: [CLLocationCoordinate2D] = []
-    @Published var locationAccuracy: CLLocationAccuracy?
+    @Published var locationAccuracy: Int?
     @Published var decibelLevel: Int?
     @Published var prediction: String?
     @Published var cameraSession: AVCaptureSession?
     @Published var accelerometerValues: SIMD3<Float>?
+    @Published var isMetaWearConnected: Bool = false
     
     private let authViewModel: AuthViewModelType
     private let storageService: StorageServiceType
@@ -69,11 +70,14 @@ final class SessionViewModel: NSObject, ObservableObject {
         
         locationService.startUpdating()
         audioService.startRecording()
+        isMetaWearConnected = metaWearViewModel.metaWear != nil
+        metaWearViewModel.connectDevice()
     }
     
     func stopSession() {
         locationService.stopUpdating()
         audioService.stopRecording()
+        metaWearViewModel.disconnectDevice()
         storageService.closeFile()
         storageService.saveFileOnDevice(originalURL: fileURL!)
     }
@@ -105,6 +109,11 @@ final class SessionViewModel: NSObject, ObservableObject {
             return
         }
         
+        guard let accelerometerValues = accelerometerValues else {
+            print("Accelerometer data is empty")
+            return
+        }
+        
         let date = Date()
         let now = Constants.globalFormatter.string(from: date)
         let elapsed = Date().timeIntervalSince1970 - sessionStartTime
@@ -114,7 +123,7 @@ final class SessionViewModel: NSObject, ObservableObject {
         
         let predictionStr = prediction ?? "Disabled"
         
-        let row = "\(now),\(elapsed),\(accelerometerValues!.x),\(accelerometerValues!.y),\(accelerometerValues!.z),\(latitude),\(longitude),\(predictionStr)\n"
+        let row = "\(now),\(elapsed),\(accelerometerValues.x),\(accelerometerValues.y),\(accelerometerValues.z),\(latitude),\(longitude),\(predictionStr)\n"
         
         do {
             try storageService.append(row: row, to: fileURL)
@@ -126,7 +135,7 @@ final class SessionViewModel: NSObject, ObservableObject {
 }
 
 extension SessionViewModel: LocationServiceDelegate {
-    func didUpdateLocation(_ location: CLLocation, accuracy: CLLocationAccuracy) {
+    func didUpdateLocation(_ location: CLLocation, accuracy: Int) {
         userLocation = location.coordinate
         userPath.append(location.coordinate)
         locationAccuracy = accuracy

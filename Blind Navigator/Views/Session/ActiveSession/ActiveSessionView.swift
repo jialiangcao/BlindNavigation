@@ -11,30 +11,60 @@ struct ActiveSessionView: View {
     @State private var selectedTab = 0
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            MapView(sessionViewModel: sessionViewModel)
-            .tabItem {
-                Label("Map", systemImage: "map.fill")
+        ZStack {
+            TabView(selection: $selectedTab) {
+                MapView(sessionViewModel: sessionViewModel)
+                    .tabItem {
+                        Label("Map", systemImage: "map.fill")
+                    }
+                    .tag(0)
+                
+                CameraView(sessionViewModel: sessionViewModel)
+                    .tabItem {
+                        Label("Camera", systemImage: "camera.fill")
+                    }
+                    .tag(1)
+                
+                StatisticsView(sessionViewModel: sessionViewModel)
+                    .tabItem {
+                        Label("Session", systemImage: "gearshape.fill")
+                    }
+                    .tag(2)
             }
-            .tag(0)
-            
-            CameraView(sessionViewModel: sessionViewModel)
-            .tabItem {
-                Label("Camera", systemImage: "camera.fill")
+            .tint(.cyan)
+            .onAppear {
+                let appearance = UITabBarAppearance()
+                appearance.configureWithDefaultBackground()
+                UITabBar.appearance().scrollEdgeAppearance = appearance
             }
-            .tag(1)
-            
-            StatisticsView(sessionViewModel: sessionViewModel)
-            .tabItem {
-                Label("Session", systemImage: "gearshape.fill")
+            if sessionViewModel.isMetaWearConnected == false {
+                VStack {
+                    Spacer().frame(height: 0)
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.white)
+                            .imageScale(.large)
+                        Text("MetaWear not connected. Data will not be saved.")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.leading)
+                    }
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, 22)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.red)
+                            .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 4)
+                    )
+                    .padding(.top, 100)
+                    .padding(.horizontal, 24)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .animation(.spring(), value: sessionViewModel.accelerometerValues)
+                .zIndex(1)
             }
-            .tag(2)
-        }
-        .tint(.cyan)
-        .onAppear {
-            let appearance = UITabBarAppearance()
-            appearance.configureWithDefaultBackground()
-            UITabBar.appearance().scrollEdgeAppearance = appearance
         }
     }
 }
