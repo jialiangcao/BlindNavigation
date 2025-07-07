@@ -9,25 +9,30 @@ import AVFoundation
 
 final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
     private let storageService: StorageServiceType
-
+    
     var captureSession: AVCaptureSession
-    var isAuthorized: Bool {
-        get async {
-            let status = AVCaptureDevice.authorizationStatus(for: .video)
-            
-            var isAuthorized = status == .authorized
-            
-            if status == .notDetermined {
-                isAuthorized = await AVCaptureDevice.requestAccess(for: .video)
-            }
-            
-            return isAuthorized
+    func checkAuthorization() async -> Bool {
+        let videoStatus = AVCaptureDevice.authorizationStatus(for: .video)
+        let audioStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+        
+        var videoGranted = videoStatus == .authorized
+        var audioGranted = audioStatus == .authorized
+        
+        if videoStatus == .notDetermined {
+            videoGranted = await AVCaptureDevice.requestAccess(for: .video)
         }
+        
+        if audioStatus == .notDetermined {
+            audioGranted = await AVCaptureDevice.requestAccess(for: .audio)
+        }
+        
+        return videoGranted && audioGranted
     }
+    
     var setupSuccess: Bool = false // Prevents crashing when running start/stopRecording() without a properly configured session
     private var videoOutput = AVCaptureMovieFileOutput()
     private var outputURL: URL?
-
+    
     init(storageService: StorageServiceType) {
         self.storageService = storageService
         self.captureSession = AVCaptureSession()
@@ -41,12 +46,19 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
             captureSession.stopRunning()
         }
     }
-
+    
     func createCaptureSession() async {
-        guard await isAuthorized else { return }
+        guard await checkAuthorization() else { return }
         
         captureSession.beginConfiguration()
         captureSession.sessionPreset = .medium // For battery and file size, low is too blurry
+        
+        guard let audioDevice = AVCaptureDevice.default(for: .audio),
+              let audioInput = try? AVCaptureDeviceInput(device: audioDevice),
+              captureSession.canAddInput(audioInput) else {
+            fatalError("Can't add audio input")
+        }
+        captureSession.addInput(audioInput)
         
         // TODO: Show errors on screen
         // Will not work on a simulator or preview
@@ -66,7 +78,7 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
             return
         }
         captureSession.addOutput(videoOutput)
-
+        
         captureSession.commitConfiguration()
         captureSession.startRunning()
         setupSuccess = true
@@ -81,7 +93,7 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
             print("CameraService failed setup or videoOutput is already recording")
             return
         }
-                
+        
         let date = Date()
         let now = Constants.globalFormatter.string(from: date)
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -95,7 +107,7 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
             print("No recording session to stop")
             return
         }
-
+        
         videoOutput.stopRecording()
     }
 }

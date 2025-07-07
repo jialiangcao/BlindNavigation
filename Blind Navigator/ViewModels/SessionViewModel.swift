@@ -42,7 +42,7 @@ final class SessionViewModel: NSObject, ObservableObject {
         self.storageService = storageService
         self.locationService = locationService
         self.predictionService = predictionService
-        self.audioService = AudioService(authViewModel: authViewModel, storageService: storageService)
+        self.audioService = AudioService(authViewModel: authViewModel)
 
         super.init()
 

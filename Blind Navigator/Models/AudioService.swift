@@ -57,69 +57,69 @@ final class AudioService: NSObject, AVAudioRecorderDelegate {
     weak var delegate: AudioServiceDelegate?
     
     private var engine: AudioEngineType
-    private var recorder: AudioRecorderType
+    // private var recorder: AudioRecorderType
     private let urlSession: URLSessionType
     private let userDefaults: UserDefaultsType
     private let authViewModel: AuthViewModelType
-    private let storageService: StorageServiceType
+    // private let storageService: StorageServiceType
     
     private let preferPredictions: Bool
     private var buffer: [Float] = []
     private var lastUpdateTime: TimeInterval = 0.0
     private let requiredSize = Int(Constants.audioConfig.duration * Double(Constants.audioConfig.sampleRate))
-    var audioURL: String
+    // var audioURL: String
     
     init(authViewModel: AuthViewModelType,
-         storageService: StorageServiceType,
+         // storageService: StorageServiceType,
          engine: AudioEngineType = AVAudioEngine(),
-         recorder: AudioRecorderType = {
-        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("recording_\(Date().timeIntervalSince1970).m4a")
-        let settings = [
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: Constants.audioConfig.sampleRate,
-            AVNumberOfChannelsKey: 2,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-        ]
-        return try! AVAudioRecorder(url: url, settings: settings)
-    }(),
+         //         recorder: AudioRecorderType = {
+         //        let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("recording_\(Date().timeIntervalSince1970).m4a")
+         //        let settings = [
+         //            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+         //            AVSampleRateKey: Constants.audioConfig.sampleRate,
+         //            AVNumberOfChannelsKey: 2,
+         //            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+         //        ]
+         //        return try! AVAudioRecorder(url: url, settings: settings)
+         
          urlSession: URLSessionType = URLSession.shared,
-         userDefaults: UserDefaultsType = UserDefaults.standard,
+         userDefaults: UserDefaultsType = UserDefaults.standard
     ) {
         self.authViewModel = authViewModel
-        self.storageService = storageService
+        // self.storageService = storageService
         self.engine = engine
-        self.recorder = recorder
+        // self.recorder = recorder
         self.urlSession = urlSession
         self.userDefaults = userDefaults
-        self.audioURL = "audio-"+Constants.globalFormatter.string(from: Date())
+        // self.audioURL = "audio-"+Constants.globalFormatter.string(from: Date())
         
         self.preferPredictions = userDefaults.bool(forKey: "preferPredictions")
         
         super.init()
-        self.recorder.delegate = self
+        // self.recorder.delegate = self
     }
     
     func startRecording() {
         setupAudioSession()
-        setupRecorder()
+        // setupRecorder()
         setupEngine()
     }
     
     func stopRecording() {
         engine.engineStop()
-        recorder.stop()
+        // recorder.stop()
         
-        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let fileExtension = recorder.url.pathExtension
-        let fullURL = audioURL + ".\(fileExtension)"
-        let renamedURL = documentsDirectory.appendingPathComponent(fullURL)
+        //        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        //        let fileExtension = recorder.url.pathExtension
+        //        let fullURL = audioURL + ".\(fileExtension)"
+        //        let renamedURL = documentsDirectory.appendingPathComponent(fullURL)
         
-        do {
-            try FileManager.default.moveItem(at: recorder.url, to: renamedURL)
-            storageService.saveFileOnDevice(originalURL: renamedURL)
-        } catch {
-            print("Failed to rename recording file: \(error.localizedDescription)")
-        }
+        //        do {
+        //            try FileManager.default.moveItem(at: recorder.url, to: renamedURL)
+        //            storageService.saveFileOnDevice(originalURL: renamedURL)
+        //        } catch {
+        //            print("Failed to rename recording file: \(error.localizedDescription)")
+        //        }
     }
     
     private func setupAudioSession() {
@@ -144,28 +144,28 @@ final class AudioService: NSObject, AVAudioRecorderDelegate {
         }
         
         // Sets built-in speakers as output device, NOT TESTED
-        for out in session.currentRoute.outputs {
-            if out.portType == .builtInSpeaker || out.portType == .bluetoothA2DP {
-                do {
-                    try session.overrideOutputAudioPort(.speaker)
-                } catch {
-                    print("Error setting preferred output: \(error)")
-                }
-            }
-        }
+        //        for out in session.currentRoute.outputs {
+        //            if out.portType == .builtInSpeaker || out.portType == .bluetoothA2DP {
+        //                do {
+        //                    try session.overrideOutputAudioPort(.speaker)
+        //                } catch {
+        //                    print("Error setting preferred output: \(error)")
+        //                }
+        //            }
+        //        }
     }
     
-    private func setupRecorder() {
-        guard recorder.prepareToRecord() == true else {
-            print("Error preparing audio recording")
-            return
-        }
-        
-        guard recorder.record() == true else {
-            print("Error starting audio recording")
-            return
-        }
-    }
+    //    private func setupRecorder() {
+    //        guard recorder.prepareToRecord() == true else {
+    //            print("Error preparing audio recording")
+    //            return
+    //        }
+    //
+    //        guard recorder.record() == true else {
+    //            print("Error starting audio recording")
+    //            return
+    //        }
+    //    }
     
     private func setupEngine() {
         let inputNode = engine.engineInputNode
