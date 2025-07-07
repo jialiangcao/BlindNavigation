@@ -13,15 +13,15 @@ struct ActiveSessionView: View {
     var body: some View {
         ZStack {
             TabView(selection: $selectedTab) {
-                MapView(sessionViewModel: sessionViewModel)
-                    .tabItem {
-                        Label("Map", systemImage: "map.fill")
-                    }
-                    .tag(0)
-                
                 CameraView(sessionViewModel: sessionViewModel)
                     .tabItem {
                         Label("Camera", systemImage: "camera.fill")
+                    }
+                    .tag(0)
+
+                MapView(sessionViewModel: sessionViewModel)
+                    .tabItem {
+                        Label("Map", systemImage: "map.fill")
                     }
                     .tag(1)
                 
@@ -37,6 +37,7 @@ struct ActiveSessionView: View {
                 appearance.configureWithDefaultBackground()
                 UITabBar.appearance().scrollEdgeAppearance = appearance
             }
+
             if sessionViewModel.isMetaWearConnected == false {
                 VStack {
                     Spacer().frame(height: 0)
@@ -64,6 +65,13 @@ struct ActiveSessionView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
                 .animation(.spring(), value: sessionViewModel.accelerometerValues)
                 .zIndex(1)
+            }
+
+        }
+        .onAppear {
+            Task {
+                await sessionViewModel.startCameraService()
+                sessionViewModel.startRecording()
             }
         }
     }

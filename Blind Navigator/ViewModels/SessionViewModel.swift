@@ -13,99 +13,92 @@ final class SessionViewModel: NSObject, ObservableObject {
     @Published var userLocation: CLLocationCoordinate2D?
     @Published var userPath: [CLLocationCoordinate2D] = []
     @Published var locationAccuracy: Int?
+
     @Published var decibelLevel: Int?
     @Published var prediction: String?
+
     @Published var cameraSession: AVCaptureSession?
+
     @Published var accelerometerValues: SIMD3<Float>?
     @Published var isMetaWearConnected: Bool = false
     
-    private let authViewModel: AuthViewModelType
-    private let storageService: StorageServiceType
-    private let locationService: LocationService
     private var audioService: AudioService
-    private let predictionService: PredictionService
-    private var cameraService: CameraService?
+    private let authViewModel: AuthViewModelType
+    private var cameraService: CameraService
+    private let locationService: LocationService
     private var metaWearViewModel: MetaWearViewModel
-    
+    private let predictionService: PredictionService
+    private let storageService: StorageServiceType
+    private let fileDate: String
+
     private var fileURL: URL?
     private var sessionStartTime: TimeInterval = 0
     
     init(
-        metaWearViewModel: MetaWearViewModel,
         authViewModel: AuthViewModelType = AuthViewModel(),
-        storageService: StorageServiceType = StorageService(),
         locationService: LocationService = LocationService(),
+        metaWearViewModel: MetaWearViewModel,
         predictionService: PredictionService = PredictionService(),
+        storageService: StorageServiceType = StorageService(),
     ) {
-        self.metaWearViewModel = metaWearViewModel
-        self.authViewModel = authViewModel
-        self.storageService = storageService
-        self.locationService = locationService
-        self.predictionService = predictionService
+        self.fileDate = Constants.globalFormatter.string(from: Date())
         self.audioService = AudioService(authViewModel: authViewModel)
+        self.authViewModel = authViewModel
+        self.cameraService = CameraService(storageService: storageService, fileDate: fileDate)
+        self.locationService = locationService
+        self.metaWearViewModel = metaWearViewModel
+        self.predictionService = predictionService
+        self.storageService = storageService
 
         super.init()
 
-        self.metaWearViewModel.delegate = self
-        self.locationService.delegate = self
         self.audioService.delegate = self
+        self.locationService.delegate = self
+        self.metaWearViewModel.delegate = self
         self.predictionService.delegate = self
         startSession()
-    }
-    
-    deinit {
-        stopSession()
     }
     
     func startSession() {
         sessionStartTime = Date().timeIntervalSince1970
         do {
             let headers = "Timestamp,Elapsed Time,x-coordinate,y-coordinate,z-coordinate,latitude,longitude,prediction\n"
-            let date = Date()
-            let now = Constants.globalFormatter.string(from: date)
-            fileURL = try storageService.createCSVFile(sessionId: "\(now)", headers: headers)
+            fileURL = try storageService.createCSVFile(sessionId: "\(fileDate)", headers: headers)
         } catch {
             print("Failed to create CSV file: \(error)")
         }
         
-        locationService.startUpdating()
-        audioService.startRecording()
         isMetaWearConnected = metaWearViewModel.metaWear != nil
+
+        audioService.startRecording()
+        locationService.startUpdating()
         metaWearViewModel.connectDevice()
     }
     
-    func stopSession() {
-        locationService.stopUpdating()
+    func stopSession() async {
         audioService.stopRecording()
+        locationService.stopUpdating()
         metaWearViewModel.disconnectDevice()
         storageService.closeFile()
         storageService.saveFileOnDevice(originalURL: fileURL!)
+        await cameraService.stopRecording()
     }
     
     func startCameraService() async {
-        self.cameraService = CameraService(storageService: storageService)
-        guard cameraService != nil else {
-            print("SessionViewModel: Error creating cameraService")
-            return
-        }
-        
-        await cameraService!.createCaptureSession()
+        await cameraService.createCaptureSession()
         // Needs to run on the main thread because cameraSession is @Published
         await MainActor.run {
-            cameraSession = cameraService!.getCaptureSession()
+            cameraSession = cameraService.getCaptureSession()
         }
     }
     
     func startRecording() {
-        cameraService?.startRecording()
-    }
-    
-    func stopRecording() {
-        cameraService?.stopRecording()
+        cameraService.startRecording()
     }
     
     private func logCurrentData() {
         guard let fileURL = fileURL, let userLocation = userLocation else {
+            print("Cannot log data, no file URL")
             return
         }
         
@@ -114,8 +107,7 @@ final class SessionViewModel: NSObject, ObservableObject {
             return
         }
         
-        let date = Date()
-        let now = Constants.globalFormatter.string(from: date)
+        let now = Constants.globalFormatter.string(from: Date())
         let elapsed = Date().timeIntervalSince1970 - sessionStartTime
         
         let latitude = userLocation.latitude
@@ -131,7 +123,6 @@ final class SessionViewModel: NSObject, ObservableObject {
             print("Failed to append row to CSV: \(error)")
         }
     }
-    
 }
 
 extension SessionViewModel: LocationServiceDelegate {

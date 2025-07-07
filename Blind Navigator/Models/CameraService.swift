@@ -9,8 +9,11 @@ import AVFoundation
 
 final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
     private let storageService: StorageServiceType
-    
+    private let outputURL: URL
+    private var videoOutput = AVCaptureMovieFileOutput()
+    private var recordingFinishedContinuation: CheckedContinuation<Void, Never>?
     var captureSession: AVCaptureSession
+
     func checkAuthorization() async -> Bool {
         let videoStatus = AVCaptureDevice.authorizationStatus(for: .video)
         let audioStatus = AVCaptureDevice.authorizationStatus(for: .audio)
@@ -18,33 +21,22 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
         var videoGranted = videoStatus == .authorized
         var audioGranted = audioStatus == .authorized
         
-        if videoStatus == .notDetermined {
+        if videoStatus == .notDetermined || videoStatus == .denied || videoStatus == .restricted {
             videoGranted = await AVCaptureDevice.requestAccess(for: .video)
         }
         
-        if audioStatus == .notDetermined {
+        if audioStatus == .notDetermined || audioStatus == .denied || audioStatus == .restricted {
             audioGranted = await AVCaptureDevice.requestAccess(for: .audio)
         }
         
         return videoGranted && audioGranted
     }
     
-    var setupSuccess: Bool = false // Prevents crashing when running start/stopRecording() without a properly configured session
-    private var videoOutput = AVCaptureMovieFileOutput()
-    private var outputURL: URL?
-    
-    init(storageService: StorageServiceType) {
+    init(storageService: StorageServiceType, fileDate: String) {
         self.storageService = storageService
         self.captureSession = AVCaptureSession()
-    }
-    
-    deinit {
-        if (videoOutput.isRecording) {
-            stopRecording()
-        }
-        if (captureSession.isRunning) {
-            captureSession.stopRunning()
-        }
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        self.outputURL = documents.appendingPathComponent("video-" + fileDate + ".mov")
     }
     
     func createCaptureSession() async {
@@ -81,7 +73,6 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
         
         captureSession.commitConfiguration()
         captureSession.startRunning()
-        setupSuccess = true
     }
     
     func getCaptureSession() -> AVCaptureSession {
@@ -89,26 +80,24 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
     }
     
     func startRecording() {
-        guard setupSuccess == true, !videoOutput.isRecording else {
-            print("CameraService failed setup or videoOutput is already recording")
+        guard !videoOutput.isRecording else {
+            print("VideoOutput is already recording")
             return
         }
-        
-        let date = Date()
-        let now = Constants.globalFormatter.string(from: date)
-        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let outputURL = documents.appendingPathComponent("video-"+"\(now)"+".mov")
         
         videoOutput.startRecording(to: outputURL, recordingDelegate: self)
     }
     
-    func stopRecording() {
-        guard setupSuccess == true, videoOutput.isRecording else {
+    func stopRecording() async {
+        guard videoOutput.isRecording else {
             print("No recording session to stop")
             return
         }
         
-        videoOutput.stopRecording()
+        await withCheckedContinuation { continuation in
+            self.recordingFinishedContinuation = continuation
+            videoOutput.stopRecording()
+        }
     }
 }
 
@@ -119,5 +108,8 @@ extension CameraService {
         } else {
             storageService.saveFileOnDevice(originalURL: outputFileURL)
         }
+        
+        recordingFinishedContinuation?.resume()
+        recordingFinishedContinuation = nil
     }
 }

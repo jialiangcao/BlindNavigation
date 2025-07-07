@@ -12,7 +12,12 @@ struct StatisticsView: View {
     @ObservedObject var sessionViewModel: SessionViewModel
 
     private func endSession() {
-        navigationViewModel.setStartSessionView()
+        Task {
+            await sessionViewModel.stopSession()
+            await MainActor.run {
+                navigationViewModel.setStartSessionView()
+            }
+        }
     }
 
     var body: some View {
