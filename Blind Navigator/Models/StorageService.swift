@@ -21,13 +21,13 @@ protocol StorageServiceType {
 final class StorageService: StorageServiceType {
     private var fileHandle: FileHandle?
     private let historyKey = "sessionFileHistory"
-    private let canetip = UserDefaults.standard.value(forKey: "canetip") as? String ?? ""
-    private let weather = UserDefaults.standard.value(forKey: "weather") as? String ?? ""
+    private let caneType = UserDefaults.standard.value(forKey: "caneType") as? String ?? "Unset"
+    private let weather = UserDefaults.standard.value(forKey: "weather") as? String ?? "Unset"
     
     func createCSVFile(sessionId: String, headers: String) throws -> URL {
         let fileManager = FileManager.default
         let documents = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let fileURL = documents.appendingPathComponent("data-"+"\(sessionId).csv")
+        let fileURL = documents.appendingPathComponent("\(sessionId)" + "_" + caneType + "_" + weather + ".csv")
         
         if !fileManager.fileExists(atPath: fileURL.path) {
             try headers.write(to: fileURL, atomically: true, encoding: .utf8)
@@ -55,13 +55,7 @@ final class StorageService: StorageServiceType {
     func uploadFile(localFileURL: URL, remotePath: String, completion: @escaping (Result<URL, Error>) -> Void) {
         let storageRef = Storage.storage().reference(withPath: remotePath)
         
-        let metadata = StorageMetadata()
-        metadata.customMetadata = [
-            "canetip": canetip,
-            "weather": weather
-        ]
-
-        storageRef.putFile(from: localFileURL, metadata: metadata) { metadata, error in
+        storageRef.putFile(from: localFileURL, metadata: nil) { metadata, error in
             if let error = error {
                 print(error)
                 completion(.failure(error))

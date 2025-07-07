@@ -12,6 +12,9 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
     private let outputURL: URL
     private var videoOutput = AVCaptureMovieFileOutput()
     private var recordingFinishedContinuation: CheckedContinuation<Void, Never>?
+    private let caneType = UserDefaults.standard.value(forKey: "caneType") as? String ?? "Unset"
+    private let weather = UserDefaults.standard.value(forKey: "weather") as? String ?? "Unset"
+
     var captureSession: AVCaptureSession
 
     func checkAuthorization() async -> Bool {
@@ -36,7 +39,7 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
         self.storageService = storageService
         self.captureSession = AVCaptureSession()
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        self.outputURL = documents.appendingPathComponent("video-" + fileDate + ".mov")
+        self.outputURL = documents.appendingPathComponent(fileDate + "_" + caneType + "_" + weather + ".mov")
     }
     
     func createCaptureSession() async {
@@ -48,7 +51,8 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
         guard let audioDevice = AVCaptureDevice.default(for: .audio),
               let audioInput = try? AVCaptureDeviceInput(device: audioDevice),
               captureSession.canAddInput(audioInput) else {
-            fatalError("Can't add audio input")
+            print("Can't add audio input")
+            return
         }
         captureSession.addInput(audioInput)
         

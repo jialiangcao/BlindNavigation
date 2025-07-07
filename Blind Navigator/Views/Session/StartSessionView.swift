@@ -14,7 +14,7 @@ struct StartSessionView: View {
     @State private var showingSettings = false
     @State private var showingHistory = false
     @AppStorage("preferPredictions") private var preferPredictions = false
-    @AppStorage("canetip") private var canetip = "Unset"
+    @AppStorage("caneType") private var caneType = "Unset"
     @AppStorage("weather") private var weather = "Unset"
     
     private var settingsSections: [SettingsSection] {
@@ -22,19 +22,19 @@ struct StartSessionView: View {
                 SettingsSection(title: "Session", items: [
                     SettingItem(
                         title: "Predictions (Only use with Unlimited LTE)",
-                        iconName: "waveform",
+                        iconName: "waveform.and.mic",
                         iconColor: .blue,
                         type: .toggle($preferPredictions)
                     ),
                     SettingItem(
-                        title: "Cane Tip Material",
+                        title: "Cane Type",
                         iconName: "pencil.tip",
                         iconColor: .green,
-                        type: .picker($canetip, options: ["Metal", "Ceramic", "Plastic"])
+                        type: .picker($caneType, options: ["Roller_Marshmallow", "Marshmallow", "Roller_Ball", "Pencil", "Metal", "Ceramic"])
                     ),
                     SettingItem(
                         title: "Weather Conditions",
-                        iconName: "sun.max.fill",
+                        iconName: "cloud.sun.fill",
                         iconColor: .yellow,
                         type: .picker($weather, options: ["Clear", "Rainy", "Windy"])
                     )
