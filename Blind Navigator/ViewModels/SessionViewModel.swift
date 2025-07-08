@@ -19,6 +19,7 @@ final class SessionViewModel: NSObject, ObservableObject {
     
     @Published var cameraSession: AVCaptureSession?
     @Published var recordingError: String? = nil
+    @Published var isPreviewAttached = false
     
     @Published var accelerometerValues: SIMD3<Float>?
     @Published var isMetaWearConnected: Bool = false

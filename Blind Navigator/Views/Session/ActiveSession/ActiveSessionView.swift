@@ -37,6 +37,19 @@ struct ActiveSessionView: View {
                 appearance.configureWithDefaultBackground()
                 UITabBar.appearance().scrollEdgeAppearance = appearance
             }
+            .onAppear {
+            Task {
+                await sessionViewModel.startCameraService()
+                
+                // Starting recording before preview is attached will break
+                while sessionViewModel.isPreviewAttached == false {
+                    try? await Task.sleep(nanoseconds: 50_000_000)
+                }
+                
+                sessionViewModel.startRecording()
+            }
+        }
+
 
             ZStack {
                 if sessionViewModel.isMetaWearConnected == false {
@@ -59,12 +72,6 @@ struct ActiveSessionView: View {
             }
             .animation(.easeInOut, value: sessionViewModel.recordingError)
             .animation(.easeInOut, value: sessionViewModel.isMetaWearConnected)
-        }
-        .onAppear {
-            Task {
-                await sessionViewModel.startCameraService()
-                sessionViewModel.startRecording()
-            }
         }
     }
 }

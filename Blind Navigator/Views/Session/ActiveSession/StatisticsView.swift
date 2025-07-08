@@ -12,9 +12,8 @@ struct StatisticsView: View {
     @ObservedObject var sessionViewModel: SessionViewModel
 
     private func endSession() {
-        Task {
+        Task.detached(priority: .background) {
             await sessionViewModel.stopSession()
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
             await MainActor.run {
                 navigationViewModel.setStartSessionView()
             }

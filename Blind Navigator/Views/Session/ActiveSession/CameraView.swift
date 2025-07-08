@@ -14,7 +14,9 @@ struct CameraView: View {
         ZStack {
             // Camera Preview
             if let session = sessionViewModel.cameraSession {
-                CameraPreview(session: session)
+                CameraPreview(session: session) {
+                    sessionViewModel.isPreviewAttached = true
+                }
                     .ignoresSafeArea()
             } else {
                 Color(.systemGroupedBackground)
