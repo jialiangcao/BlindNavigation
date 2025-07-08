@@ -13,12 +13,13 @@ final class SessionViewModel: NSObject, ObservableObject {
     @Published var userLocation: CLLocationCoordinate2D?
     @Published var userPath: [CLLocationCoordinate2D] = []
     @Published var locationAccuracy: Int?
-
+    
     @Published var decibelLevel: Int?
     @Published var prediction: String?
-
+    
     @Published var cameraSession: AVCaptureSession?
-
+    @Published var recordingError: String? = nil
+    
     @Published var accelerometerValues: SIMD3<Float>?
     @Published var isMetaWearConnected: Bool = false
     
@@ -30,7 +31,7 @@ final class SessionViewModel: NSObject, ObservableObject {
     private let predictionService: PredictionService
     private let storageService: StorageServiceType
     private let fileDate: String
-
+    
     private var fileURL: URL?
     private var sessionStartTime: TimeInterval = 0
     
@@ -39,7 +40,7 @@ final class SessionViewModel: NSObject, ObservableObject {
         locationService: LocationService = LocationService(),
         metaWearViewModel: MetaWearViewModel,
         predictionService: PredictionService = PredictionService(),
-        storageService: StorageServiceType = StorageService(),
+        storageService: StorageServiceType = StorageService()
     ) {
         self.fileDate = Constants.globalFormatter.string(from: Date())
         self.audioService = AudioService(authViewModel: authViewModel)
@@ -49,9 +50,14 @@ final class SessionViewModel: NSObject, ObservableObject {
         self.metaWearViewModel = metaWearViewModel
         self.predictionService = predictionService
         self.storageService = storageService
-
+        
         super.init()
-
+        
+        self.cameraService.onRecordingError = { [weak self] errorMessage in
+            DispatchQueue.main.async {
+                self?.recordingError = errorMessage
+            }
+        }
         self.audioService.delegate = self
         self.locationService.delegate = self
         self.metaWearViewModel.delegate = self
@@ -69,7 +75,7 @@ final class SessionViewModel: NSObject, ObservableObject {
         }
         
         isMetaWearConnected = metaWearViewModel.metaWear != nil
-
+        
         audioService.startRecording()
         locationService.startUpdating()
         metaWearViewModel.connectDevice()

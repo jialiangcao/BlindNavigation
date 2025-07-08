@@ -16,6 +16,7 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
     private let weather = UserDefaults.standard.value(forKey: "weather") as? String ?? "Unset"
 
     var captureSession: AVCaptureSession
+    var onRecordingError: ((String) -> Void)?
 
     func checkAuthorization() async -> Bool {
         let videoStatus = AVCaptureDevice.authorizationStatus(for: .video)
@@ -51,7 +52,7 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
         guard let audioDevice = AVCaptureDevice.default(for: .audio),
               let audioInput = try? AVCaptureDeviceInput(device: audioDevice),
               captureSession.canAddInput(audioInput) else {
-            print("Can't add audio input")
+            onRecordingError?("Can't add audio input")
             return
         }
         captureSession.addInput(audioInput)
@@ -59,18 +60,18 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
         // TODO: Show errors on screen
         // Will not work on a simulator or preview
         guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
-            print("Error creating videoDevice")
+            onRecordingError?("Error creating videoDevice")
             return
         }
         
         guard let videoDeviceInput = try? AVCaptureDeviceInput(device: videoDevice), captureSession.canAddInput(videoDeviceInput) != false else {
-            print("Error setting videoDeviceInput")
+            onRecordingError?("Error setting videoDeviceInput")
             return
         }
         captureSession.addInput(videoDeviceInput)
         
         guard captureSession.canAddOutput(videoOutput) else {
-            print("Error setting camera video output")
+            onRecordingError?("Error setting camera video output")
             return
         }
         captureSession.addOutput(videoOutput)
@@ -85,7 +86,7 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
     
     func startRecording() {
         guard !videoOutput.isRecording else {
-            print("VideoOutput is already recording")
+            onRecordingError?("VideoOutput is already recording")
             return
         }
         
@@ -94,7 +95,7 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
     
     func stopRecording() async {
         guard videoOutput.isRecording else {
-            print("No recording session to stop")
+            onRecordingError?("No recording session to stop")
             return
         }
         
@@ -109,6 +110,7 @@ extension CameraService {
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         if let error = error {
             print("Recording error: \(error.localizedDescription)")
+            onRecordingError?(error.localizedDescription)
         } else {
             storageService.saveFileOnDevice(originalURL: outputFileURL)
         }

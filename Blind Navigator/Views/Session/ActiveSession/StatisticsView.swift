@@ -14,6 +14,7 @@ struct StatisticsView: View {
     private func endSession() {
         Task {
             await sessionViewModel.stopSession()
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
             await MainActor.run {
                 navigationViewModel.setStartSessionView()
             }

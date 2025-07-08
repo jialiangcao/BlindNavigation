@@ -38,35 +38,27 @@ struct ActiveSessionView: View {
                 UITabBar.appearance().scrollEdgeAppearance = appearance
             }
 
-            if sessionViewModel.isMetaWearConnected == false {
-                VStack {
-                    Spacer().frame(height: 0)
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.white)
-                            .imageScale(.large)
-                        Text("MetaWear not connected. Data will not be saved.")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.leading)
-                    }
-                    .padding(.vertical, 14)
-                    .padding(.horizontal, 22)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color.red)
-                            .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 4)
+            ZStack {
+                if sessionViewModel.isMetaWearConnected == false {
+                    BannerNotificationView(
+                        systemImageName: "exclamationmark.triangle.fill",
+                        message: "MetaWear not connected. Data will not be saved.",
+                        backgroundColor: .red
                     )
-                    .padding(.top, 100)
-                    .padding(.horizontal, 24)
-                    Spacer()
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .transition(.move(edge: .top).combined(with: .opacity))
-                .animation(.spring(), value: sessionViewModel.accelerometerValues)
-                .zIndex(1)
+                
+                if let error = sessionViewModel.recordingError {
+                    BannerNotificationView(
+                        systemImageName: "exclamationmark.triangle.fill",
+                        message: error,
+                        backgroundColor: .yellow
+                    )
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
             }
-
+            .animation(.easeInOut, value: sessionViewModel.recordingError)
+            .animation(.easeInOut, value: sessionViewModel.isMetaWearConnected)
         }
         .onAppear {
             Task {
