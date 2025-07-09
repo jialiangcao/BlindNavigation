@@ -23,11 +23,13 @@ final class StorageService: StorageServiceType {
     private let historyKey = "sessionFileHistory"
     private let caneType = UserDefaults.standard.value(forKey: "caneType") as? String ?? "Unset"
     private let weather = UserDefaults.standard.value(forKey: "weather") as? String ?? "Unset"
+    private let testBed = UserDefaults.standard.value(forKey: "testBed") as? String ?? "Unset"
+    private let areaCode = UserDefaults.standard.value(forKey: "areaCode") as? Int ?? 0
     
     func createCSVFile(sessionId: String, headers: String) throws -> URL {
         let fileManager = FileManager.default
         let documents = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let fileURL = documents.appendingPathComponent("\(sessionId)" + "_" + caneType + "_" + weather + ".csv")
+        let fileURL = documents.appendingPathComponent("\(sessionId)" + "_" + caneType + "_" + weather + "_" + testBed + "_" + "\(areaCode)" + ".csv")
         
         if !fileManager.fileExists(atPath: fileURL.path) {
             try headers.write(to: fileURL, atomically: true, encoding: .utf8)

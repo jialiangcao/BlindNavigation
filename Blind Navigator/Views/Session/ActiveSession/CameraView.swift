@@ -27,7 +27,7 @@ struct CameraView: View {
                         .foregroundColor(.secondary)
                     Text("Camera Unavailable")
                         .font(.title3.weight(.semibold))
-                    Text("Recording is off or camera permissions are disabled.")
+                    Text("Camera permissions may be disabled, end the session and try again.")
                         .font(.body)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)

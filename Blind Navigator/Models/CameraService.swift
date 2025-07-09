@@ -14,6 +14,8 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
     private var recordingFinishedContinuation: CheckedContinuation<Void, Never>?
     private let caneType = UserDefaults.standard.value(forKey: "caneType") as? String ?? "Unset"
     private let weather = UserDefaults.standard.value(forKey: "weather") as? String ?? "Unset"
+    private let testBed = UserDefaults.standard.value(forKey: "testBed") as? String ?? "Unset"
+    private let areaCode = UserDefaults.standard.value(forKey: "areaCode") as? Int ?? 0
 
     var captureSession: AVCaptureSession
     var onRecordingError: ((String) -> Void)?
@@ -40,7 +42,7 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
         self.storageService = storageService
         self.captureSession = AVCaptureSession()
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        self.outputURL = documents.appendingPathComponent(fileDate + "_" + caneType + "_" + weather + ".mov")
+        self.outputURL = documents.appendingPathComponent(fileDate + "_" + caneType + "_" + weather + "_" + testBed + "_" + "\(areaCode)" + ".mov")
     }
     
     func createCaptureSession() async {

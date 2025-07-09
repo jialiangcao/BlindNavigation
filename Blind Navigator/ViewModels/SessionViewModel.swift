@@ -165,4 +165,8 @@ extension SessionViewModel: MetaWearDelegate {
         self.accelerometerValues = values
         self.logCurrentData()
     }
+    
+    func didDisconnect() {
+        self.isMetaWearConnected = false
+    }
 }

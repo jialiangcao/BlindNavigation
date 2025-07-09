@@ -21,6 +21,7 @@ enum SettingType {
     case navigation(() -> AnyView)
     case action(() -> Void)
     case picker(Binding<String>, options: [String])
+    case intPicker(Binding<Int>, entries: Int)
 }
 
 struct SettingsSection: Identifiable {
@@ -77,6 +78,14 @@ struct SettingsRowView: View {
             ) {
                 ForEach(options, id: \.self) { option in
                     Text(option).tag(option)
+                }
+            }
+        case .intPicker(let binding, let entries):
+            Picker(selection: binding, label: Label(item.title, systemImage: item.iconName)
+                .foregroundColor(item.iconColor)
+            ) {
+                ForEach(1...entries, id: \.self) { i in
+                    Text("\(i)").tag(i)
                 }
             }
         }

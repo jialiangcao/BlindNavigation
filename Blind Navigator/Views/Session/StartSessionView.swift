@@ -16,6 +16,8 @@ struct StartSessionView: View {
     @AppStorage("preferPredictions") private var preferPredictions = false
     @AppStorage("caneType") private var caneType = "Unset"
     @AppStorage("weather") private var weather = "Unset"
+    @AppStorage("testBed") private var testBed = "Unset"
+    @AppStorage("areaCode") private var areaCode = 0
     
     private var settingsSections: [SettingsSection] {
             [
@@ -37,7 +39,19 @@ struct StartSessionView: View {
                         iconName: "cloud.sun.fill",
                         iconColor: .yellow,
                         type: .picker($weather, options: ["Clear", "Rainy", "Windy"])
-                    )
+                    ),
+                    SettingItem(
+                        title: "Test Bed",
+                        iconName: "map",
+                        iconColor: .orange,
+                        type: .picker($testBed, options: ["BMCC", "VISIONS"])
+                    ),
+                    SettingItem(
+                        title: "Area Code",
+                        iconName: "number",
+                        iconColor: .cyan,
+                        type: .intPicker($areaCode, entries: 50)
+                    ),
                 ]),
                 SettingsSection(title: "MetaWear", items: [
                     SettingItem(

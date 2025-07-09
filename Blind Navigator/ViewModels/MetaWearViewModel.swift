@@ -11,6 +11,7 @@ import Combine
 
 protocol MetaWearDelegate: AnyObject {
     func didUpdateAccelerometerData(_ values: SIMD3<Float>)
+    func didDisconnect()
 }
 
 final class MetaWearViewModel: ObservableObject {
@@ -53,6 +54,15 @@ final class MetaWearViewModel: ObservableObject {
                 print(completion)
             }, receiveValue: { [weak self] data in
                 self?.delegate?.didUpdateAccelerometerData(data.value)
+            })
+            .store(in: &cancellables)
+        
+        metaWear
+            .publishWhenDisconnected()
+            .sink(receiveValue: { [weak self] _ in
+                DispatchQueue.main.async {
+                    self?.delegate?.didDisconnect()
+                }
             })
             .store(in: &cancellables)
     }

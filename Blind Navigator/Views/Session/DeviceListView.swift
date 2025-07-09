@@ -69,7 +69,10 @@ struct DeviceListView: View {
                 Button(action: {
                     if deviceList.selectedDevice != nil {
                         metaWearViewModel.setupDevice()
+                    } else {
+                        metaWearViewModel.metaWear = nil
                     }
+
                     navigationViewModel.setStartSessionView()
                 }) {
                     Text("Confirm")

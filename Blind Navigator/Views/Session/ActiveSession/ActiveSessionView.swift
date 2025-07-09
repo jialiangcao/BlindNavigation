@@ -14,7 +14,7 @@ struct ActiveSessionView: View {
         ZStack(alignment: .top) {
             if sessionViewModel.isMetaWearConnected == false {
                 NotificationPopup(
-                    title: "MetaWear not connected. Data will not be saved.",
+                    title: "MetaWear device is not connected. Please end the session and connect it first.",
                     systemIconName: "exclamationmark.triangle.fill",
                     backgroundColor: .red
                 )
