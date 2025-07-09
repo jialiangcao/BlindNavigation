@@ -47,7 +47,7 @@ final class CameraService: NSObject, AVCaptureFileOutputRecordingDelegate {
         guard await checkAuthorization() else { return }
         
         captureSession.beginConfiguration()
-        captureSession.sessionPreset = .medium // For battery and file size, low is too blurry
+        captureSession.sessionPreset = .low
         
         guard let audioDevice = AVCaptureDevice.default(for: .audio),
               let audioInput = try? AVCaptureDeviceInput(device: audioDevice),

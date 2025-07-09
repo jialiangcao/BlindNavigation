@@ -51,6 +51,7 @@ struct DeviceListView: View {
                                 .onTapGesture {
                                     withAnimation(.spring()) {
                                         deviceList.selectDevice(device)
+                                        metaWearViewModel.setDevice(device)
                                     }
                                 }
                             }
@@ -66,8 +67,7 @@ struct DeviceListView: View {
             VStack {
                 Spacer()
                 Button(action: {
-                    if let selected = deviceList.selectedDevice {
-                        metaWearViewModel.setDevice(selected)
+                    if deviceList.selectedDevice != nil {
                         metaWearViewModel.setupDevice()
                     }
                     navigationViewModel.setStartSessionView()

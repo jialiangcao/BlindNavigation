@@ -23,8 +23,11 @@ final class MetaWearViewModel: ObservableObject {
     }
     
     func setDevice(_ device: MetaWear) {
+        if (metaWear != nil) {
+            metaWear?.disconnect()
+        }
+
         metaWear = device
-        print("Set device")
     }
     
     func setupDevice() {
@@ -36,6 +39,14 @@ final class MetaWearViewModel: ObservableObject {
         metaWear
             .publishWhenConnected()
             .first()
+            .command(MWLED.Flash(color: .blue, pattern: .pulse(repetitions: 5)))
+            .sink(receiveCompletion: { _ in
+            }, receiveValue: { _ in
+            })
+            .store(in: &cancellables)
+
+        metaWear
+            .publishWhenConnected()
             .stream(.accelerometer(rate: .hz100, gravity: .g2))
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { completion in
@@ -48,7 +59,7 @@ final class MetaWearViewModel: ObservableObject {
 
     func connectDevice() {
         guard let metaWear = metaWear else {
-            print("No MetaWear device")
+            print("No MetaWear device to connect")
             return
         }
 
@@ -56,10 +67,11 @@ final class MetaWearViewModel: ObservableObject {
     }
     
     func disconnectDevice() {
-        if (metaWear == nil) {
+        guard let metaWear = metaWear else {
             print("No MetaWear device connected")
             return
         }
-        metaWear!.disconnect()
+
+        metaWear.disconnect()
     }
 }
