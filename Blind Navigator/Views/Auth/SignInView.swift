@@ -13,13 +13,24 @@ struct SignInView: View {
     @EnvironmentObject var navigationViewModel: NavigationViewModel
     
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             LinearGradient(
                 gradient: Gradient(colors: [Color("accent").opacity(0.7), Color(.systemBackground)]),
                 startPoint: .top,
                 endPoint: UnitPoint(x: 0.5, y: 0.8)
             )
             .edgesIgnoringSafeArea(.all)
+            
+            if let error = authViewModel.errorMessage {
+                NotificationPopup(
+                    title: authViewModel.errorMessage!,
+                    systemIconName: "exclamationmark.triangle",
+                    backgroundColor: .red
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .animation(.easeIn(duration: 0.3), value: error)
+                .zIndex(1)
+            }
             
             VStack {
                 Image("bn_logo-removebg")
@@ -34,38 +45,39 @@ struct SignInView: View {
                     .padding()
                 
                 TextField("Email Address", text: $authViewModel.signInEmail)
-                .frame(width: 340)
-                .padding()
-                .background(Color.clear)
-                .cornerRadius(20)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.secondary, lineWidth: 2)
-                )
-                .autocapitalization(.none)
-                .disableAutocorrection(true)
-                .keyboardType(.default)
+                    .frame(width: 340)
+                    .padding()
+                    .background(Color.clear)
+                    .cornerRadius(20)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.secondary, lineWidth: 2)
+                    )
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .keyboardType(.default)
                 
                 SecureField("Password", text: $authViewModel.signInPassword)
-                .frame(width: 340)
-                .padding()
-                .background(Color.clear)
-                .cornerRadius(20)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.secondary, lineWidth: 2)
-                )
-                .autocapitalization(.none)
-                .disableAutocorrection(true)
-                .keyboardType(.default)
+                    .frame(width: 340)
+                    .padding()
+                    .background(Color.clear)
+                    .cornerRadius(20)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color.secondary, lineWidth: 2)
+                    )
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .keyboardType(.default)
                 
-                
-                Button(action: { authViewModel.signIn { success in
-                        if success {
-                            navigationViewModel.setStartSessionView()
+                Button(action: {
+                        authViewModel.signIn { success in
+                            print(success)
+                            if success {
+                                navigationViewModel.setStartSessionView()
+                            }
                         }
                     }
-                }
                 ) {
                     Label("Log In", systemImage: "arrow.right")
                         .frame(width: 340)
@@ -80,13 +92,6 @@ struct SignInView: View {
                         .foregroundColor(.blue)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
-                }
-                
-                if authViewModel.errorMessage != nil {
-                    Text(authViewModel.errorMessage!)
-                            .foregroundColor(.red)
-                            .padding(.top, 10)
-                            .multilineTextAlignment(.center)
                 }
                 Spacer()
             }

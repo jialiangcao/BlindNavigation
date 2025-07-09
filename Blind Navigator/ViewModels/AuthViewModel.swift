@@ -14,16 +14,13 @@ protocol AuthViewModelType: AnyObject {
      var user: FirebaseAuth.User? { get }
      var idToken: String? { get }
      var errorMessage: String? { get }
-     var isLoading: Bool { get }
      
      var signInEmail: String { get set }
      var signInPassword: String { get set }
-     var signUpEmail: String { get set }
-     var signUpPassword: String { get set }
      var signUpConfirmPassword: String { get set }
      
      func signIn(completion: @escaping (Bool) -> Void)
-     func signUp()
+     func signUp(completion: @escaping (Bool) -> Void)
      func resetPassword()
      func signOut()
      func getUserEmail() -> String?
@@ -34,7 +31,6 @@ final class AuthViewModel: ObservableObject, AuthViewModelType {
     @Published var user: FirebaseAuth.User? // nil if signed out
     @Published var idToken: String?
     @Published var errorMessage: String?
-    @Published var isLoading = false
     
     private var authHandle: AuthStateDidChangeListenerHandle?
     private let auth = Auth.auth()
@@ -44,9 +40,16 @@ final class AuthViewModel: ObservableObject, AuthViewModelType {
     @Published var signInPassword = ""
     
     // MARK: – Form state for Sign‑Up
-    @Published var signUpEmail = ""
-    @Published var signUpPassword = ""
     @Published var signUpConfirmPassword = ""
+    
+    func setError(as message: String) {
+        errorMessage = message
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            withAnimation {
+                self.errorMessage = nil
+            }
+        }
+    }
     
     init() {
         self.user = Auth.auth().currentUser
@@ -66,15 +69,13 @@ final class AuthViewModel: ObservableObject, AuthViewModelType {
     
     // MARK: - Auth functions
     func signIn(completion: @escaping (Bool) -> Void) {
-        errorMessage = nil
         guard !signInEmail.isEmpty, !signInPassword.isEmpty else {
-            errorMessage = "Email and password cannot be blank."
+            setError(as: "Email and password cannot be blank.")
+            completion(false)
             return
         }
-        isLoading = true
         auth.signIn(withEmail: signInEmail, password: signInPassword) { [weak self] _, err in
             DispatchQueue.main.async {
-                self?.isLoading = false
                 if let err = err {
                     self?.errorMessage = err.localizedDescription
                     completion(false)
@@ -85,21 +86,28 @@ final class AuthViewModel: ObservableObject, AuthViewModelType {
         }
     }
     
-    func signUp() {
-        errorMessage = nil
-        guard !signUpEmail.isEmpty,
-              !signUpPassword.isEmpty,
-              signUpPassword == signUpConfirmPassword else
-        {
-            errorMessage = "Check your email/password fields."
+    func signUp(completion: @escaping (Bool) -> Void) {
+        guard !signInEmail.isEmpty,
+              !signInPassword.isEmpty
+        else {
+            setError(as: "Email and password cannot be blank.")
+            completion(false)
             return
         }
-        isLoading = true
-        auth.createUser(withEmail: signUpEmail, password: signUpPassword) { [weak self] _, err in
+        
+        guard signInPassword == signUpConfirmPassword else {
+            setError(as: "Passwords do not match.")
+            completion(false)
+            return
+        }
+
+        auth.createUser(withEmail: signInEmail, password: signInPassword) { [weak self] _, err in
             DispatchQueue.main.async {
-                self?.isLoading = false
-                if let err = err {
-                    self?.errorMessage = err.localizedDescription
+                if let err = err?.localizedDescription {
+                    self?.setError(as: err)
+                    completion(false)
+                } else {
+                    completion(true)
                 }
             }
         }
@@ -108,16 +116,16 @@ final class AuthViewModel: ObservableObject, AuthViewModelType {
     func resetPassword() {
         errorMessage = nil
         guard !signInEmail.isEmpty else {
-            errorMessage = "Enter your email to reset."
+            setError(as: "Enter your email to reset.")
             return
         }
-        isLoading = true
         auth.sendPasswordReset(withEmail: signInEmail) { [weak self] err in
             DispatchQueue.main.async {
-                self?.isLoading = false
-                self?.errorMessage = err == nil
-                ? "Reset email sent."
-                : err!.localizedDescription
+                if let err = err?.localizedDescription {
+                    self?.setError(as: err)
+                } else {
+                    self?.setError(as: "Reset email sent.")
+                }
             }
         }
     }
@@ -127,7 +135,7 @@ final class AuthViewModel: ObservableObject, AuthViewModelType {
             try auth.signOut()
             user = nil
         } catch {
-            errorMessage = error.localizedDescription
+            setError(as: error.localizedDescription)
         }
     }
     

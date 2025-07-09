@@ -11,14 +11,38 @@ struct ActiveSessionView: View {
     @State private var selectedTab = 0
     
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
+            if sessionViewModel.isMetaWearConnected == false {
+                NotificationPopup(
+                    title: "MetaWear not connected. Data will not be saved.",
+                    systemIconName: "exclamationmark.triangle.fill",
+                    backgroundColor: .red
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .animation(.easeInOut, value: sessionViewModel.isMetaWearConnected)
+                .padding(.top, 80)
+                .zIndex(1)
+            }
+            
+            if let error = sessionViewModel.recordingError {
+                NotificationPopup(
+                    title: error,
+                    systemIconName: "exclamationmark.triangle.fill",
+                    backgroundColor: .yellow
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .animation(.easeInOut, value: sessionViewModel.recordingError)
+                .padding(.top, 80)
+                .zIndex(1)
+            }
+            
             TabView(selection: $selectedTab) {
                 CameraView(sessionViewModel: sessionViewModel)
                     .tabItem {
                         Label("Camera", systemImage: "camera.fill")
                     }
                     .tag(0)
-
+                
                 MapView(sessionViewModel: sessionViewModel)
                     .tabItem {
                         Label("Map", systemImage: "map.fill")
@@ -38,40 +62,17 @@ struct ActiveSessionView: View {
                 UITabBar.appearance().scrollEdgeAppearance = appearance
             }
             .onAppear {
-            Task {
-                await sessionViewModel.startCameraService()
-                
-                // Starting recording before preview is attached will break
-                while sessionViewModel.isPreviewAttached == false {
-                    try? await Task.sleep(nanoseconds: 50_000_000)
-                }
-                
-                sessionViewModel.startRecording()
-            }
-        }
-
-
-            ZStack {
-                if sessionViewModel.isMetaWearConnected == false {
-                    BannerNotificationView(
-                        systemImageName: "exclamationmark.triangle.fill",
-                        message: "MetaWear not connected. Data will not be saved.",
-                        backgroundColor: .red
-                    )
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                }
-                
-                if let error = sessionViewModel.recordingError {
-                    BannerNotificationView(
-                        systemImageName: "exclamationmark.triangle.fill",
-                        message: error,
-                        backgroundColor: .yellow
-                    )
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                Task {
+                    await sessionViewModel.startCameraService()
+                    
+                    // Starting recording before preview is attached will break
+                    while sessionViewModel.isPreviewAttached == false {
+                        try? await Task.sleep(nanoseconds: 50_000_000)
+                    }
+                    
+                    sessionViewModel.startRecording()
                 }
             }
-            .animation(.easeInOut, value: sessionViewModel.recordingError)
-            .animation(.easeInOut, value: sessionViewModel.isMetaWearConnected)
         }
     }
 }

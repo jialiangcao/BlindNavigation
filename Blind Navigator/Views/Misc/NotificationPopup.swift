@@ -26,9 +26,10 @@ struct NotificationPopup: View {
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(backgroundColor.opacity(0.9))
+                .fill(backgroundColor)
         )
         .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 2)
+        .padding(.top, 16)
     }
 }
 

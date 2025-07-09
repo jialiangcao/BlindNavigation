@@ -87,7 +87,6 @@ class MockAuth: AuthViewModelType {
     var user: FirebaseAuth.User?
     var idToken: String? = "mock-token"
     var errorMessage: String? = nil
-    var isLoading: Bool = false
 
     var signInEmail: String = ""
     var signInPassword: String = ""
@@ -107,11 +106,13 @@ class MockAuth: AuthViewModelType {
         }
     }
 
-    func signUp() {
+    func signUp(completion: @escaping (Bool) -> Void) {
         if signUpPassword == signUpConfirmPassword {
             isSignedIn = true
+            completion(true)
         } else {
             errorMessage = "Passwords do not match"
+            completion(false)
         }
     }
 
@@ -197,9 +198,7 @@ class AudioServiceTests: XCTestCase, AudioServiceDelegate {
         mockDelegate = MockDelegate()
         
         audioService = AudioService(authViewModel: mockAuth,
-                                    storageService: mockStorage,
                                     engine: mockEngine,
-                                    recorder: mockRecorder,
                                     urlSession: mockSession,
                                     userDefaults: mockDefaults)
         audioService.delegate = mockDelegate
@@ -225,10 +224,6 @@ class AudioServiceTests: XCTestCase, AudioServiceDelegate {
         
         _ = FileManager.default
             .urls(for: .documentDirectory, in: .userDomainMask).first!
-        XCTAssertEqual(
-            mockStorage.savedURL?.deletingPathExtension().lastPathComponent,
-            audioService.audioURL
-        )
         XCTAssertEqual(mockStorage.savedURL?.pathExtension, fileURL.pathExtension)
     }
     
