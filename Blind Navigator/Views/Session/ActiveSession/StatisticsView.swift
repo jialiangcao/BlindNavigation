@@ -10,12 +10,28 @@ import SwiftUI
 struct StatisticsView: View {
     @EnvironmentObject private var navigationViewModel: NavigationViewModel
     @ObservedObject var sessionViewModel: SessionViewModel
+    
+    @State private var saveOverlayPhase: SaveOverlayPhase = .hidden
 
     private func endSession() {
+        saveOverlayPhase = .loading
+
         Task.detached(priority: .background) {
             await sessionViewModel.stopSession()
+            
             await MainActor.run {
-                navigationViewModel.setStartSessionView()
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    saveOverlayPhase = .successConfetti
+                }
+            }
+            
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+
+            await MainActor.run {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    saveOverlayPhase = .hidden
+                    navigationViewModel.setStartSessionView()
+                }
             }
         }
     }
@@ -24,7 +40,9 @@ struct StatisticsView: View {
         ZStack {
             Color(.systemGroupedBackground)
                 .ignoresSafeArea()
-            
+
+            SaveStatusOverlay(phase: $saveOverlayPhase)
+
             VStack(spacing: 0) {
                 // Title
                 Text("Session Statistics")

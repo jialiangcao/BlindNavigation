@@ -12,7 +12,7 @@ struct ActiveSessionView: View {
     
     var body: some View {
         ZStack(alignment: .top) {
-            if sessionViewModel.isMetaWearConnected == false {
+            if sessionViewModel.isMetaWearConnected == false && selectedTab != 2 {
                 NotificationPopup(
                     title: "MetaWear device is not connected. Please end the session and connect it first.",
                     systemIconName: "exclamationmark.triangle.fill",

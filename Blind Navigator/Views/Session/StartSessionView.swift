@@ -13,6 +13,7 @@ struct StartSessionView: View {
     // MARK: - Settings
     @State private var showingSettings = false
     @State private var showingHistory = false
+    @State private var meshState: MeshGradientState = .base
     @AppStorage("preferPredictions") private var preferPredictions = false
     @AppStorage("caneType") private var caneType = "Unset"
     @AppStorage("weather") private var weather = "Unset"
@@ -20,94 +21,96 @@ struct StartSessionView: View {
     @AppStorage("areaCode") private var areaCode = 0
     
     private var settingsSections: [SettingsSection] {
-            [
-                SettingsSection(title: "Session", items: [
-                    SettingItem(
-                        title: "Predictions (Only use with Unlimited LTE)",
-                        iconName: "waveform.and.mic",
-                        iconColor: .blue,
-                        type: .toggle($preferPredictions)
-                    ),
-                    SettingItem(
-                        title: "Cane Type",
-                        iconName: "pencil.tip",
-                        iconColor: .green,
-                        type: .picker($caneType, options: ["Roller_Marshmallow", "Marshmallow", "Roller_Ball", "Pencil", "Metal", "Ceramic"])
-                    ),
-                    SettingItem(
-                        title: "Weather Conditions",
-                        iconName: "cloud.sun.fill",
-                        iconColor: .yellow,
-                        type: .picker($weather, options: ["Clear", "Rainy", "Windy"])
-                    ),
-                    SettingItem(
-                        title: "Test Bed",
-                        iconName: "map",
-                        iconColor: .orange,
-                        type: .picker($testBed, options: ["BMCC", "VISIONS"])
-                    ),
-                    SettingItem(
-                        title: "Area Code",
-                        iconName: "number",
-                        iconColor: .cyan,
-                        type: .intPicker($areaCode, entries: 50)
-                    ),
-                ]),
-                SettingsSection(title: "MetaWear", items: [
-                    SettingItem(
-                        title: "Manage Devices",
-                        iconName: "antenna.radiowaves.left.and.right",
-                        iconColor: .blue,
-                        type: .action(promptMetaWear)
-                    )
-                ]),
-                SettingsSection(title: "Account", items: [
-                    SettingItem(
-                        title: "Sign out",
-                        iconName: "rectangle.portrait.and.arrow.right",
-                        iconColor: .red,
-                        type: .action(signOut)
-                    )
-                ]),
-            ]
-        }
+        [
+            SettingsSection(title: "Session", items: [
+                SettingItem(
+                    title: "Predictions (Only use with Unlimited LTE)",
+                    iconName: "waveform.and.mic",
+                    iconColor: .blue,
+                    type: .toggle($preferPredictions)
+                ),
+                SettingItem(
+                    title: "Cane Type",
+                    iconName: "pencil.tip",
+                    iconColor: .green,
+                    type: .picker($caneType, options: ["Roller_Marshmallow", "Marshmallow", "Roller_Ball", "Pencil", "Metal", "Ceramic"])
+                ),
+                SettingItem(
+                    title: "Weather Conditions",
+                    iconName: "cloud.sun.fill",
+                    iconColor: .yellow,
+                    type: .picker($weather, options: ["Clear", "Rainy", "Windy"])
+                ),
+                SettingItem(
+                    title: "Test Bed",
+                    iconName: "map",
+                    iconColor: .orange,
+                    type: .picker($testBed, options: ["BMCC", "VISIONS"])
+                ),
+                SettingItem(
+                    title: "Area Code",
+                    iconName: "number",
+                    iconColor: .cyan,
+                    type: .intPicker($areaCode, entries: 50)
+                ),
+            ]),
+            SettingsSection(title: "MetaWear", items: [
+                SettingItem(
+                    title: "Manage Devices",
+                    iconName: "antenna.radiowaves.left.and.right",
+                    iconColor: .blue,
+                    type: .action(promptMetaWear)
+                )
+            ]),
+            SettingsSection(title: "Account", items: [
+                SettingItem(
+                    title: "Sign out",
+                    iconName: "rectangle.portrait.and.arrow.right",
+                    iconColor: .red,
+                    type: .action(signOut)
+                )
+            ]),
+        ]
+    }
     
     private func startSession() {
-        navigationViewModel.setActiveSessionView()
+        Task.detached(priority: .background) {
+            await MainActor.run {
+                meshState = .shiftUp
+            }
+            
+            try? await Task.sleep(nanoseconds: 400_000_000)
+
+            await MainActor.run {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    navigationViewModel.setActiveSessionView()
+                }
+            }
+        }
     }
     
     private func signOut() {
         do {
             try Auth.auth().signOut()
-            navigationViewModel.setAuthView()
+            withAnimation(.easeInOut) {
+                navigationViewModel.setAuthView()
+            }
         } catch let signOutError as NSError {
             print("Error signing out: \(signOutError)")
         }
     }
     
     private func promptMetaWear() {
-        navigationViewModel.setDeviceListView()
+        withAnimation(.easeInOut) {
+            navigationViewModel.setDeviceListView()
+        }
     }
     
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [.mint.opacity(0.35), Color(.systemBackground).opacity(1)]),
-                startPoint: .top,
-                endPoint: UnitPoint(x: 0.5, y: 0.8)
-            )
-            .edgesIgnoringSafeArea(.all)
-            
-            RadialGradient(
-                gradient: Gradient(colors: [
-                    Color.mint
-                ]),
-                center: .top,
-                startRadius: 5,
-                endRadius: 400
-            )
-            .blendMode(.overlay)
-            .edgesIgnoringSafeArea(.all)
+            MeshGradientView(animationState: $meshState)
+                .ignoresSafeArea(.all)
+                .animation(.easeInOut, value: meshState)
             
             VStack(alignment: .leading) {
                 Button(action: { showingSettings.toggle() }) {
@@ -162,7 +165,7 @@ struct StartSessionView: View {
                 Button("Start Session", action: startSession)
                     .frame(width: 340)
                     .padding()
-                    .background(Color(red: 0.25, green: 0.8, blue: 0.8))
+                    .background(.ultraThinMaterial)
                     .foregroundStyle(Color.primary)
                     .font(.headline)
                     .cornerRadius(20)

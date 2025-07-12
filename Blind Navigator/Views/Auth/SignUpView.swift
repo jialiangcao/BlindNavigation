@@ -15,7 +15,9 @@ struct SignUpView: View {
     func signUpAndPush () {
         authViewModel.signUp { signUpSuccess in
             if signUpSuccess {
-                navigationViewModel.setStartSessionView()
+                withAnimation(.easeInOut) {
+                    navigationViewModel.setStartSessionView()
+                }
             }
         }
     }

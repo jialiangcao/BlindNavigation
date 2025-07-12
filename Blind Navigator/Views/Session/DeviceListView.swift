@@ -12,14 +12,33 @@ struct DeviceListView: View {
     @EnvironmentObject private var navigationViewModel: NavigationViewModel
     @ObservedObject var metaWearViewModel: MetaWearViewModel
     @StateObject private var deviceList = DeviceListUseCase()
+    @State private var savePhase: SaveOverlayPhase = .hidden
     
     var body: some View {
         ZStack {
             Color(.systemGroupedBackground)
                 .ignoresSafeArea()
             
+            SaveStatusOverlay(phase: $savePhase)
             VStack(spacing: 0) {
                 // Title
+                HStack {
+                    Button {
+                        withAnimation(.easeInOut) {
+                            navigationViewModel.setStartSessionView()
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "chevron.left")
+                            Text("Back")
+                        }
+                        .foregroundColor(.accentColor)
+                    }
+                    .padding(.leading, 20)
+                    
+                    Spacer()
+                }
+                
                 Text("Select a MetaWear Device")
                     .fontWeight(.bold)
                     .font(.largeTitle)
@@ -51,7 +70,6 @@ struct DeviceListView: View {
                                 .onTapGesture {
                                     withAnimation(.spring()) {
                                         deviceList.selectDevice(device)
-                                        metaWearViewModel.setDevice(device)
                                     }
                                 }
                             }
@@ -66,27 +84,46 @@ struct DeviceListView: View {
             
             VStack {
                 Spacer()
-                Button(action: {
-                    if deviceList.selectedDevice != nil {
-                        metaWearViewModel.setupDevice()
-                    } else {
-                        metaWearViewModel.metaWear = nil
+                Button("Confirm") {
+                    Task {
+                        await MainActor.run {
+                            withAnimation(.easeInOut) {
+                                savePhase = .loading
+                            }
+                        }
+                        
+                        if let device = deviceList.selectedDevice {
+                            metaWearViewModel.setDevice(device)
+                            metaWearViewModel.setupDevice()
+                        } else {
+                            metaWearViewModel.metaWear = nil
+                        }
+                        
+                        await MainActor.run {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                savePhase = .success
+                            }
+                        }
+                        
+                        try? await Task.sleep(nanoseconds: 1_000_000_000)
+                        
+                        await MainActor.run {
+                            withAnimation(.easeInOut) {
+                                navigationViewModel.setStartSessionView()
+                            }
+                        }
                     }
-
-                    navigationViewModel.setStartSessionView()
-                }) {
-                    Text("Confirm")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(16)
-                        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 32)
+                .disabled(deviceList.selectedDevice == nil)
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(deviceList.selectedDevice == nil ? Color.gray : Color.accentColor)
+                .foregroundColor(.white)
+                .cornerRadius(16)
+                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
             }
+            .padding(.horizontal)
         }
         .onAppear { deviceList.onAppear() }
         .onDisappear { deviceList.onDisappear() }

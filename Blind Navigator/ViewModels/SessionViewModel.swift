@@ -31,11 +31,14 @@ final class SessionViewModel: NSObject, ObservableObject {
     private var metaWearViewModel: MetaWearViewModel
     private let predictionService: PredictionService
     private let storageService: StorageServiceType
-    private let fileDate: String
     
+    private var accelerometerMonitorTimer: Timer?
+    private var lastAccelerometerValues: SIMD3<Float>?
+
     private var fileURL: URL?
     private var sessionStartTime: TimeInterval = 0
-    
+    private let fileDate: String
+
     init(
         authViewModel: AuthViewModelType = AuthViewModel(),
         locationService: LocationService = LocationService(),
@@ -80,6 +83,7 @@ final class SessionViewModel: NSObject, ObservableObject {
         audioService.startRecording()
         locationService.startUpdating()
         metaWearViewModel.connectDevice()
+        startAccelerometerMonitor()
     }
     
     func stopSession() async {
@@ -130,6 +134,29 @@ final class SessionViewModel: NSObject, ObservableObject {
             print("Failed to append row to CSV: \(error)")
         }
     }
+    
+    private func startAccelerometerMonitor() {
+        accelerometerMonitorTimer?.invalidate()
+
+        accelerometerMonitorTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+
+            if let current = self.accelerometerValues, let last = self.lastAccelerometerValues {
+                if current == last {
+                    DispatchQueue.main.async {
+                        self.isMetaWearConnected = false
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                        self.isMetaWearConnected = true
+                    }
+                }
+            }
+
+            self.lastAccelerometerValues = self.accelerometerValues
+        }
+    }
+
 }
 
 extension SessionViewModel: LocationServiceDelegate {

@@ -74,7 +74,9 @@ struct SignInView: View {
                         authViewModel.signIn { success in
                             print(success)
                             if success {
-                                navigationViewModel.setStartSessionView()
+                                withAnimation(.easeInOut) {
+                                    navigationViewModel.setStartSessionView()
+                                }
                             }
                         }
                     }
