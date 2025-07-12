@@ -79,7 +79,7 @@ struct StartSessionView: View {
                 meshState = .shiftUp
             }
             
-            try? await Task.sleep(nanoseconds: 400_000_000)
+            try? await Task.sleep(nanoseconds: 300_000_000)
 
             await MainActor.run {
                 withAnimation(.easeInOut(duration: 0.3)) {

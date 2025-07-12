@@ -23,6 +23,8 @@ final class SessionViewModel: NSObject, ObservableObject {
     
     @Published var accelerometerValues: SIMD3<Float>?
     @Published var isMetaWearConnected: Bool = false
+
+    @Published var isEnding: Bool = false
     
     private var audioService: AudioService
     private let authViewModel: AuthViewModelType
@@ -87,6 +89,10 @@ final class SessionViewModel: NSObject, ObservableObject {
     }
     
     func stopSession() async {
+        await MainActor.run {
+            self.isEnding = true
+        }
+
         audioService.stopRecording()
         locationService.stopUpdating()
         metaWearViewModel.disconnectDevice()

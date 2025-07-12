@@ -24,8 +24,10 @@ struct DeviceListView: View {
                 // Title
                 HStack {
                     Button {
-                        withAnimation(.easeInOut) {
-                            navigationViewModel.setStartSessionView()
+                        DispatchQueue.main.async {
+                            withAnimation(.easeInOut) {
+                                navigationViewModel.setStartSessionView()
+                            }
                         }
                     } label: {
                         HStack {

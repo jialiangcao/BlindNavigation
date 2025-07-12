@@ -37,10 +37,20 @@ struct SaveStatusOverlay: View {
                     } else if phase == .success || phase == .successConfetti {
                         Image(systemName: "checkmark.circle.fill")
                             .resizable()
-                            .foregroundColor(.green)
                             .frame(width: 60, height: 60)
+                            .overlay(
+                                LinearGradient(
+                                    colors: [Color.blue, Color.green],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .mask(
+                                Image(systemName: "checkmark.circle.fill")
+                                    .resizable()
+                                    .frame(width: 60, height: 60)
+                            )
                             .scaleEffect(showCheckmark ? 1 : 0.5)
-                            .opacity(showCheckmark ? 1 : 0)
                             .onAppear {
                                 withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
                                     showCheckmark = true
@@ -88,7 +98,7 @@ struct SaveStatusOverlay: View {
 }
 
 private struct SaveStatusOverlayPreviewWrapper: View {
-    @State private var phase: SaveOverlayPhase = .loading
+    @State private var phase: SaveOverlayPhase = .success
 
     var body: some View {
         ZStack {
