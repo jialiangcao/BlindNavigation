@@ -75,7 +75,7 @@ struct StartSessionView: View {
             
             await MainActor.run {
                 withAnimation(.easeInOut) {
-                    navigationViewModel.setDeviceListView()
+                    navigationViewModel.setPreSessionView()
                 }
             }
         }
@@ -105,7 +105,7 @@ struct StartSessionView: View {
                         Text("Settings")
                     }
                 }
-                .foregroundColor(Color.white)
+                .foregroundColor(Color.primary)
                 .padding(13)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
@@ -123,7 +123,7 @@ struct StartSessionView: View {
                         Text("History")
                     }
                 }
-                .foregroundColor(Color.white)
+                .foregroundColor(Color.primary)
                 .padding(13)
                 .background(
                     RoundedRectangle(cornerRadius: 10)

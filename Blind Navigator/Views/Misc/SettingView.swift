@@ -122,7 +122,7 @@ struct SettingsSectionView: View {
                 }
             }
             .padding(.horizontal, 16)
-            .background(Color(.systemBackground))
+            .background(.ultraThinMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .padding(.horizontal, 16)
@@ -132,7 +132,6 @@ struct SettingsSectionView: View {
         Text(text)
             .font(.system(size: 14, weight: .medium))
             .foregroundColor(.secondary)
-            .padding(.vertical, 8)
             .padding(.leading, 4)
     }
 }
@@ -150,9 +149,7 @@ struct SettingsView: View {
                 }
                 .padding(.vertical, 24)
             }
-            .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }

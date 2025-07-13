@@ -29,6 +29,8 @@ struct RootView: View {
                 )
             case .deviceList:
                 DeviceListView(metaWearViewModel: metaWearViewModel)
+            case .preSessionView:
+                PreSessionView()
             }
         }
         .onAppear {

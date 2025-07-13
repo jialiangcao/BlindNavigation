@@ -13,6 +13,7 @@ enum AppScreen {
     case startSession
     case activeSession
     case deviceList
+    case preSessionView
 }
 
 final class NavigationViewModel: ObservableObject {
@@ -32,5 +33,9 @@ final class NavigationViewModel: ObservableObject {
     
     func setDeviceListView() {
         currentScreen = .deviceList
+    }
+    
+    func setPreSessionView() {
+        currentScreen = .preSessionView
     }
 }
