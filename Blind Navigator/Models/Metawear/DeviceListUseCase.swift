@@ -14,6 +14,7 @@ class DeviceListUseCase: ObservableObject {
     @Published private(set) var discoveredDevices: Set<MetaWear> = []
     @Published var selectedDevice: MetaWear? = nil
 
+    private var cancellables = Set<AnyCancellable>()
     private weak var scanner: MetaWearScanner?
     private var discoverySub: AnyCancellable? = nil
 
@@ -24,6 +25,19 @@ class DeviceListUseCase: ObservableObject {
 
 extension DeviceListUseCase {
     func onAppear() {
+        scanner?.retrieveConnectedMetaWears()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] devices in
+                for device in devices {
+                    self?.discoveredDevices.insert(device)
+
+                    if (self?.selectedDevice == nil) {
+                        self?.selectedDevice = device
+                    }
+                }
+            }
+            .store(in: &cancellables)
+
         scanner?.startScan(higherPerformanceMode: true)
         
         discoverySub = scanner?.didDiscover

@@ -10,7 +10,8 @@ import Foundation
 final class HistoryViewModel: ObservableObject {
     @Published var history: [URL] = []
     @Published var selectedFiles: Set<URL> = []
-    @Published var uploadStatus: Bool?
+    @Published var uploadPassed: Bool?
+    @Published var uploadCount: Int = 0
     @Published var isLoading: Bool = false
     
     private let storageService: StorageServiceType
@@ -37,13 +38,13 @@ final class HistoryViewModel: ObservableObject {
     public func uploadSelectedFiles() {
         guard let email = authViewModel.getUserEmail() else {
             print("No email")
-            uploadStatus = false
+            uploadPassed = false
             return
         }
         
         guard !selectedFiles.isEmpty else {
             print("No files selected")
-            uploadStatus = false
+            uploadPassed = false
             return
         }
         
@@ -54,7 +55,6 @@ final class HistoryViewModel: ObservableObject {
 
         for url in selectedFiles {
             dispatchGroup.enter()
-            print(url)
             let remotePath: String
             if (url.pathExtension == "mov") {
                 remotePath = "BlindNavigator/\(email)/sessions/video/\(url.lastPathComponent)"
@@ -70,19 +70,21 @@ final class HistoryViewModel: ObservableObject {
                 switch result {
                 case .failure(_):
                     uploadFailed = true
-                case .success(let result):
-                    print(result)
+                case .success(_):
+                    DispatchQueue.main.async {
+                        self.uploadCount += 1
+                    }
                 }
                 dispatchGroup.leave()
             }
         }
         
         dispatchGroup.notify(queue: .main) {
-            self.deleteSelectedFiles()
             if uploadFailed {
-                self.uploadStatus = false
+                self.uploadPassed = false
             } else {
-                self.uploadStatus = true
+                self.deleteSelectedFiles()
+                self.uploadPassed = true
             }
             self.isLoading = false
         }

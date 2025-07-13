@@ -9,44 +9,73 @@ import SwiftUI
 
 struct HistoryView: View {
     @ObservedObject var historyViewModel: HistoryViewModel
+    @State private var savePhase: SaveOverlayPhase = .hidden
     
     var body: some View {
         NavigationView {
             ZStack {
-                VStack {
-                    if historyViewModel.isLoading == true {
-                        ProgressView() {
-                            Text("Uploading...")
-                        }
-                        .padding()
-                        .background(Color.gray.opacity(0.4))
-                        .cornerRadius(10)
-                    }
-                }
-                .zIndex(1)
-
-                if historyViewModel.uploadStatus != nil {
-                    VStack {
-                        if historyViewModel.uploadStatus == true {
-                            NotificationPopup(
-                                title: "Upload Success",
-                                systemIconName: "checkmark.circle",
-                                backgroundColor: .green
-                            )
-                            .transition(.move(edge: .top).combined(with: .opacity))
+                SaveStatusOverlay(phase: $savePhase)
+                    .onChange(of: historyViewModel.uploadPassed) {
+                        if historyViewModel.uploadPassed == true {
+                            withAnimation {
+                                savePhase = .success
+                            }
                         } else {
-                            NotificationPopup(
-                                title: "Upload Failed",
-                                systemIconName: "exclamationmark.triangle",
-                                backgroundColor: .red
-                            )
-                            .transition(.move(edge: .top).combined(with: .opacity))
+                            withAnimation {
+                                savePhase = .failed
+                            }
                         }
                     }
-                    .frame(maxHeight: .infinity, alignment: .top)
+                    .onTapGesture {
+                        savePhase = .hidden
+                    }
+                    .zIndex(2)
+                
+                if historyViewModel.isLoading == true {
+                    let totalCount = max(historyViewModel.selectedFiles.count, 1)
+                    let progress = CGFloat(historyViewModel.uploadCount) / CGFloat(totalCount)
+                    let percentage = Int(progress * 100)
+                    
+                    VStack {
+                        Spacer()
+                        VStack(spacing: 12) {
+                            GeometryReader { geometry in
+                                let barWidth = geometry.size.width * progress
+                                
+                                ZStack(alignment: .leading) {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color.white.opacity(0.2))
+                                        .frame(height: 20)
+                                    
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [Color.green, Color.blue],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
+                                        .frame(width: barWidth, height: 20)
+                                }
+                            }
+                            .frame(height: 20)
+                            .frame(maxWidth: 250)
+                            
+                            Text("Uploading \(percentage)%")
+                                .foregroundColor(.white)
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        }
+                        .padding(16)
+                        .background(Color.black)
+                        .cornerRadius(16)
+                        .shadow(radius: 10)
+                        .padding(.horizontal)
+                        
+                        Spacer()
+                    }
                     .zIndex(1)
-                    .padding()
                 }
+                
                 VStack(spacing: 0) {
                     if historyViewModel.history.isEmpty {
                         Spacer()

@@ -23,7 +23,6 @@ struct RootView: View {
                 StartSessionView()
             case .activeSession:
                 ActiveSessionView(sessionViewModel: SessionViewModel(metaWearViewModel: metaWearViewModel))
-                    .transition(.move(edge: .bottom))
                 .overlay(
                     StopwatchView()
                         .padding(), alignment: .top

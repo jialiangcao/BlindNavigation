@@ -12,12 +12,47 @@ enum SaveOverlayPhase {
     case loading
     case success
     case successConfetti
+    case failed
 }
 
 struct SaveStatusOverlay: View {
     @Binding var phase: SaveOverlayPhase
     @State private var showConfetti = false
-    @State private var showCheckmark = false
+    @State private var showIcon = false
+
+    private var iconName: String {
+        switch phase {
+        case .success, .successConfetti:
+            return "checkmark.circle.fill"
+        case .failed:
+            return "xmark.circle.fill"
+        default:
+            return ""
+        }
+    }
+    
+    private var iconGradient: LinearGradient {
+        switch phase {
+        case .success, .successConfetti:
+            return LinearGradient(
+                colors: [Color.blue, Color.green],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .failed:
+            return LinearGradient(
+                colors: [Color.red, Color.purple],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        default:
+            return LinearGradient(
+                colors: [Color.clear, Color.clear],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+    }
 
     var body: some View {
         if phase != .hidden {
@@ -34,36 +69,35 @@ struct SaveStatusOverlay: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .transition(.opacity.animation(.easeInOut(duration: 0.2)))
-                    } else if phase == .success || phase == .successConfetti {
-                        Image(systemName: "checkmark.circle.fill")
-                            .resizable()
-                            .frame(width: 60, height: 60)
-                            .overlay(
-                                LinearGradient(
-                                    colors: [Color.blue, Color.green],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+                        Text("Saving...")
+                            .foregroundColor(.white)
+                            .font(.headline)
+                    } else {
+                        if !iconName.isEmpty {
+                            Image(systemName: iconName)
+                                .resizable()
+                                .frame(width: 60, height: 60)
+                                .overlay(iconGradient)
+                                .mask(
+                                    Image(systemName: iconName)
+                                        .resizable()
+                                        .frame(width: 60, height: 60)
                                 )
-                            )
-                            .mask(
-                                Image(systemName: "checkmark.circle.fill")
-                                    .resizable()
-                                    .frame(width: 60, height: 60)
-                            )
-                            .scaleEffect(showCheckmark ? 1 : 0.5)
-                            .onAppear {
-                                withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
-                                    showCheckmark = true
+                                .scaleEffect(showIcon ? 1 : 0.5)
+                                .onAppear {
+                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+                                        showIcon = true
+                                    }
                                 }
-                            }
-                            .onDisappear {
-                                showCheckmark = false
-                            }
-                    }
+                                .onDisappear {
+                                    showIcon = false
+                                }
+                        }
 
-                    Text(phase == .loading ? "Saving..." : "Saved successfully!")
-                        .foregroundColor(.white)
-                        .font(.headline)
+                        Text(phase == .failed ? "Something went wrong." : "Saved successfully!")
+                            .foregroundColor(.white)
+                            .font(.headline)
+                    }
                 }
                 .padding(24)
                 .background(Color(.systemGray6).opacity(0.9))
@@ -98,12 +132,12 @@ struct SaveStatusOverlay: View {
 }
 
 private struct SaveStatusOverlayPreviewWrapper: View {
-    @State private var phase: SaveOverlayPhase = .success
+    @State private var phase: SaveOverlayPhase = .successConfetti
 
     var body: some View {
         ZStack {
+            Color.gray.opacity(0.1).ignoresSafeArea()
             SaveStatusOverlay(phase: $phase)
         }
-        .padding()
     }
 }

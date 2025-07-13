@@ -107,11 +107,11 @@ struct DeviceListView: View {
                             }
                         }
                         
-                        try? await Task.sleep(nanoseconds: 1_000_000_000)
+                        try? await Task.sleep(nanoseconds: 500_000_000)
                         
                         await MainActor.run {
                             withAnimation(.easeInOut) {
-                                navigationViewModel.setStartSessionView()
+                                navigationViewModel.setActiveSessionView()
                             }
                         }
                     }

@@ -54,14 +54,6 @@ struct StartSessionView: View {
                     type: .intPicker($areaCode, entries: 50)
                 ),
             ]),
-            SettingsSection(title: "MetaWear", items: [
-                SettingItem(
-                    title: "Manage Devices",
-                    iconName: "antenna.radiowaves.left.and.right",
-                    iconColor: .blue,
-                    type: .action(promptMetaWear)
-                )
-            ]),
             SettingsSection(title: "Account", items: [
                 SettingItem(
                     title: "Sign out",
@@ -80,10 +72,10 @@ struct StartSessionView: View {
             }
             
             try? await Task.sleep(nanoseconds: 300_000_000)
-
+            
             await MainActor.run {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    navigationViewModel.setActiveSessionView()
+                withAnimation(.easeInOut) {
+                    navigationViewModel.setDeviceListView()
                 }
             }
         }
@@ -97,12 +89,6 @@ struct StartSessionView: View {
             }
         } catch let signOutError as NSError {
             print("Error signing out: \(signOutError)")
-        }
-    }
-    
-    private func promptMetaWear() {
-        withAnimation(.easeInOut) {
-            navigationViewModel.setDeviceListView()
         }
     }
     
@@ -123,7 +109,7 @@ struct StartSessionView: View {
                 .padding(13)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.gray, lineWidth: 1).fill(Color.black.opacity(0.4)))
+                        .stroke(Color.gray, lineWidth: 1).fill(.ultraThinMaterial))
                 .frame(maxWidth: .infinity, alignment: .topLeading)
                 .sheet(isPresented: $showingSettings) {
                     SettingsView(sections: settingsSections)
@@ -141,7 +127,7 @@ struct StartSessionView: View {
                 .padding(13)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.gray, lineWidth: 1).fill(Color.black.opacity(0.4)))
+                        .stroke(Color.gray, lineWidth: 1).fill(.ultraThinMaterial))
                 .frame(maxWidth: .infinity, alignment: .topLeading)
                 .sheet(isPresented: $showingHistory) {
                     HistoryView(historyViewModel: HistoryViewModel())
