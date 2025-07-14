@@ -152,6 +152,7 @@ final class SessionViewModel: NSObject, ObservableObject {
                     DispatchQueue.main.async {
                         self.isMetaWearConnected = false
                     }
+                    metaWearViewModel.connectDevice()
                 } else {
                     DispatchQueue.main.async {
                         self.isMetaWearConnected = true
