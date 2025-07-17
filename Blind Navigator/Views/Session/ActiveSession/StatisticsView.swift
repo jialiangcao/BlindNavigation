@@ -10,6 +10,21 @@ import SwiftUI
 struct StatisticsView: View {
     @ObservedObject var sessionViewModel: SessionViewModel
     
+    func signalStrengthDescription(for rssi: Int) -> String {
+        switch rssi {
+        case -60...1:
+            return "Excellent"
+        case -70...(-61):
+            return "Good"
+        case -80...(-71):
+            return "Fair"
+        case -90...(-81):
+            return "Poor"
+        default:
+            return "Unknown"
+        }
+    }
+    
     var body: some View {
         ZStack {
             Color(.systemGroupedBackground)
@@ -38,6 +53,11 @@ struct StatisticsView: View {
                             title: "GPS Accuracy",
                             value: sessionViewModel.locationAccuracy != nil ? "\(sessionViewModel.locationAccuracy!) meters" : "Disabled",
                             icon: "location.fill"
+                        )
+                        StatisticCard(
+                            title: "MetaWear Signal Strength",
+                            value: signalStrengthDescription(for: sessionViewModel.rssi ?? -100),
+                            icon: "wifi"
                         )
                     }
                     .padding(.horizontal, 20)

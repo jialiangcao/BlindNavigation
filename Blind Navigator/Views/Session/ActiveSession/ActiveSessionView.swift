@@ -14,7 +14,7 @@ struct ActiveSessionView: View {
         ZStack(alignment: .top) {
             if sessionViewModel.isMetaWearConnected == false && sessionViewModel.isEnding == false {
                 NotificationPopup(
-                    title: "MetaWear device is not connected. Please end the session and connect it first.",
+                    title: "The MetaWear sensor disconnected. We're trying to reconnect... try holding the phone closer to the bottom of the cane and wait 10-15 seconds. If the issue persists, end the session and create a new one, your data is saved.",
                     systemIconName: "exclamationmark.triangle.fill",
                     backgroundColor: .red
                 )

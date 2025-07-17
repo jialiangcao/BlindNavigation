@@ -11,7 +11,7 @@ import FirebaseStorage
 protocol StorageServiceType {
     func createCSVFile(sessionId: String, headers: String) throws -> URL
     func append(row: String, to fileURL: URL) throws
-    func closeFile()
+    func closeAllFiles()
     func uploadFile(localFileURL: URL, remotePath: String, completion: @escaping (Result<URL, Error>) -> Void)
     func saveFileOnDevice(originalURL: URL)
     func fetchLocalHistory() -> [URL]
@@ -19,7 +19,7 @@ protocol StorageServiceType {
 }
 
 final class StorageService: StorageServiceType {
-    private var fileHandle: FileHandle?
+    private var fileHandles: [URL: FileHandle] = [:]
     private let historyKey = "sessionFileHistory"
     private let caneType = UserDefaults.standard.value(forKey: "caneType") as? String ?? "Unset"
     private let weather = UserDefaults.standard.value(forKey: "weather") as? String ?? "Unset"
@@ -35,23 +35,27 @@ final class StorageService: StorageServiceType {
             try headers.write(to: fileURL, atomically: true, encoding: .utf8)
         }
         
-        fileHandle = try FileHandle(forWritingTo: fileURL)
-        fileHandle?.seekToEndOfFile()
+        let handle = try FileHandle(forWritingTo: fileURL)
+        handle.seekToEndOfFile()
+        fileHandles[fileURL] = handle
         return fileURL
     }
     
     func append(row: String, to fileURL: URL) throws {
         guard let data = row.data(using: .utf8) else { return }
-        if fileHandle == nil {
-            fileHandle = try FileHandle(forWritingTo: fileURL)
-            fileHandle?.seekToEndOfFile()
+        if fileHandles[fileURL] == nil {
+            let handle = try FileHandle(forWritingTo: fileURL)
+            handle.seekToEndOfFile()
+            fileHandles[fileURL] = handle
         }
-        fileHandle?.write(data)
+        fileHandles[fileURL]?.write(data)
     }
     
-    func closeFile() {
-        fileHandle?.closeFile()
-        fileHandle = nil
+    func closeAllFiles() {
+        for (_, handle) in fileHandles {
+            handle.closeFile()
+        }
+        fileHandles.removeAll()
     }
     
     func uploadFile(localFileURL: URL, remotePath: String, completion: @escaping (Result<URL, Error>) -> Void) {
@@ -106,8 +110,6 @@ final class StorageService: StorageServiceType {
         do {
             if fileManager.fileExists(atPath: localFileURL.path) {
                 try fileManager.removeItem(at: localFileURL)
-            } else {
-                print("File does not exist")
             }
         } catch {
             print("File delete failed, error: \(error)")

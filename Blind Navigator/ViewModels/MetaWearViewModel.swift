@@ -11,6 +11,7 @@ import Combine
 
 protocol MetaWearDelegate: AnyObject {
     func didUpdateAccelerometerData(_ values: SIMD3<Float>)
+    func didUpdateRSSI(_ rssi: Int)
     func didDisconnect()
 }
 
@@ -51,10 +52,20 @@ final class MetaWearViewModel: ObservableObject {
             .stream(.accelerometer(rate: .hz100, gravity: .g2))
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { completion in
-                print(completion)
+                if case let .failure(error) = completion {
+                    print("Stream failed with error: \(error)")
+                }
             }, receiveValue: { [weak self] data in
                 self?.delegate?.didUpdateAccelerometerData(data.value)
             })
+            .store(in: &cancellables)
+        
+        metaWear
+            .rssiPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { rssi in
+                self.delegate?.didUpdateRSSI(rssi)
+            }
             .store(in: &cancellables)
         
         metaWear

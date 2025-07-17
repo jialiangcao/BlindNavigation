@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreLocation
+import CoreMotion
 import AVFoundation
 
 final class SessionViewModel: NSObject, ObservableObject {
@@ -21,11 +22,16 @@ final class SessionViewModel: NSObject, ObservableObject {
     @Published var recordingError: String? = nil
     @Published var isPreviewAttached = false
     
-    @Published var accelerometerValues: SIMD3<Float>?
+    // Note IMUValues contains accelerometer data from a MetaWear device's internal IMU while accelerometerValues contains accelerometer data from an IPhone's internal sensors
+    @Published var IMUValues: SIMD3<Float>?
     @Published var isMetaWearConnected: Bool = false
+    @Published var rssi: Int?
 
+    @Published var accelerometerValues: CMAcceleration?
+    
     @Published var isEnding: Bool = false
     
+    private let accelerometerService: AccelerometerService
     private var audioService: AudioService
     private let authViewModel: AuthViewModelType
     private var cameraService: CameraService
@@ -34,10 +40,11 @@ final class SessionViewModel: NSObject, ObservableObject {
     private let predictionService: PredictionService
     private let storageService: StorageServiceType
     
-    private var accelerometerMonitorTimer: Timer?
-    private var lastAccelerometerValues: SIMD3<Float>?
+    private var IMUMonitorTimer: Timer?
+    private var lastIMUValues: SIMD3<Float>?
 
-    private var fileURL: URL?
+    private var fileURL: URL? // Stores location and IMU data
+    private var iphoneFileURL: URL? // Stores iPhone accelerometer data
     private var sessionStartTime: TimeInterval = 0
     private let fileDate: String
 
@@ -46,7 +53,8 @@ final class SessionViewModel: NSObject, ObservableObject {
         locationService: LocationService = LocationService(),
         metaWearViewModel: MetaWearViewModel,
         predictionService: PredictionService = PredictionService(),
-        storageService: StorageServiceType = StorageService()
+        storageService: StorageServiceType = StorageService(),
+        accelerometerService: AccelerometerService = AccelerometerService()
     ) {
         self.fileDate = Constants.globalFormatter.string(from: Date())
         self.audioService = AudioService(authViewModel: authViewModel)
@@ -56,6 +64,7 @@ final class SessionViewModel: NSObject, ObservableObject {
         self.metaWearViewModel = metaWearViewModel
         self.predictionService = predictionService
         self.storageService = storageService
+        self.accelerometerService = accelerometerService
         
         super.init()
         
@@ -64,6 +73,7 @@ final class SessionViewModel: NSObject, ObservableObject {
                 self?.recordingError = errorMessage
             }
         }
+        self.accelerometerService.delegate = self
         self.audioService.delegate = self
         self.locationService.delegate = self
         self.metaWearViewModel.delegate = self
@@ -75,17 +85,19 @@ final class SessionViewModel: NSObject, ObservableObject {
         sessionStartTime = Date().timeIntervalSince1970
         do {
             let headers = "Timestamp,Elapsed Time,x-coordinate,y-coordinate,z-coordinate,latitude,longitude,prediction\n"
-            fileURL = try storageService.createCSVFile(sessionId: "\(fileDate)", headers: headers)
+            fileURL = try storageService.createCSVFile(sessionId: "metawear_\(fileDate)", headers: headers)
+            iphoneFileURL = try storageService.createCSVFile(sessionId: "iphone_\(fileDate)", headers: "Timestamp,Elapsed Time,x-coordinate,y-coordinate,z-coordinate\n")
         } catch {
             print("Failed to create CSV file: \(error)")
         }
         
         isMetaWearConnected = metaWearViewModel.metaWear != nil
         
+        accelerometerService.startUpdating()
         audioService.startRecording()
         locationService.startUpdating()
         metaWearViewModel.connectDevice()
-        startAccelerometerMonitor()
+        startIMUMonitor()
     }
     
     func stopSession() async {
@@ -93,11 +105,13 @@ final class SessionViewModel: NSObject, ObservableObject {
             self.isEnding = true
         }
 
+        accelerometerService.stopUpdating()
         audioService.stopRecording()
         locationService.stopUpdating()
         metaWearViewModel.disconnectDevice()
-        storageService.closeFile()
+        storageService.closeAllFiles()
         storageService.saveFileOnDevice(originalURL: fileURL!)
+        storageService.saveFileOnDevice(originalURL: iphoneFileURL!)
         await cameraService.stopRecording()
     }
     
@@ -114,13 +128,23 @@ final class SessionViewModel: NSObject, ObservableObject {
     }
     
     private func logCurrentData() {
-        guard let fileURL = fileURL, let userLocation = userLocation else {
+        guard let fileURL = fileURL, let iphoneFileURL = iphoneFileURL else {
             print("Cannot log data, no file URL")
             return
         }
         
+        guard let userLocation = userLocation else {
+            print("No location data")
+            return
+        }
+        
+        guard let IMUValues = IMUValues else {
+            print("IMU data is empty")
+            return
+        }
+        
         guard let accelerometerValues = accelerometerValues else {
-            print("Accelerometer data is empty")
+            print("Iphone accelerometer data is empty")
             return
         }
         
@@ -132,22 +156,24 @@ final class SessionViewModel: NSObject, ObservableObject {
         
         let predictionStr = prediction ?? "Disabled"
         
-        let row = "\(now),\(elapsed),\(accelerometerValues.x),\(accelerometerValues.y),\(accelerometerValues.z),\(latitude),\(longitude),\(predictionStr)\n"
+        let row = "\(now),\(elapsed),\(IMUValues.x),\(IMUValues.y),\(IMUValues.z),\(latitude),\(longitude),\(predictionStr)\n"
+        let iphoneRow = "\(now),\(elapsed),\(accelerometerValues.x),\(accelerometerValues.y),\(accelerometerValues.z)\n"
         
         do {
             try storageService.append(row: row, to: fileURL)
+            try storageService.append(row: iphoneRow, to: iphoneFileURL)
         } catch {
             print("Failed to append row to CSV: \(error)")
         }
     }
     
-    private func startAccelerometerMonitor() {
-        accelerometerMonitorTimer?.invalidate()
+    private func startIMUMonitor() {
+        IMUMonitorTimer?.invalidate()
 
-        accelerometerMonitorTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+        IMUMonitorTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
 
-            if let current = self.accelerometerValues, let last = self.lastAccelerometerValues {
+            if let current = self.IMUValues, let last = self.lastIMUValues {
                 if current == last {
                     DispatchQueue.main.async {
                         self.isMetaWearConnected = false
@@ -160,7 +186,7 @@ final class SessionViewModel: NSObject, ObservableObject {
                 }
             }
 
-            self.lastAccelerometerValues = self.accelerometerValues
+            self.lastIMUValues = self.IMUValues
         }
     }
 
@@ -171,6 +197,12 @@ extension SessionViewModel: LocationServiceDelegate {
         userLocation = location.coordinate
         userPath.append(location.coordinate)
         locationAccuracy = accuracy
+    }
+}
+
+extension SessionViewModel: AccelerometerServiceDelegate {
+    func didUpdateAccelerometerData(_ data: CMAcceleration) {
+        self.accelerometerValues = data
     }
 }
 
@@ -196,8 +228,12 @@ extension SessionViewModel: PredictionServiceDelegate {
 
 extension SessionViewModel: MetaWearDelegate {
     func didUpdateAccelerometerData(_ values: SIMD3<Float>) {
-        self.accelerometerValues = values
+        self.IMUValues = values
         self.logCurrentData()
+    }
+    
+    func didUpdateRSSI(_ rssi: Int) {
+        self.rssi = rssi
     }
     
     func didDisconnect() {
