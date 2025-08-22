@@ -138,29 +138,26 @@ final class SessionViewModel: NSObject, ObservableObject {
             return
         }
         
-        guard let IMUValues = IMUValues else {
-            print("IMU data is empty")
-            return
-        }
-        
-        guard let accelerometerValues = accelerometerValues else {
-            print("Iphone accelerometer data is empty")
-            return
-        }
-        
         let now = Constants.globalFormatter.string(from: Date())
         let elapsed = Date().timeIntervalSince1970 - sessionStartTime
-        
+
         let latitude = userLocation.latitude
         let longitude = userLocation.longitude
         
         let predictionStr = prediction ?? "Disabled"
+
+        var IMURow = ""
+        if let IMUValues = IMUValues {
+            IMURow = "\(now),\(elapsed),\(IMUValues.x),\(IMUValues.y),\(IMUValues.z),\(latitude),\(longitude),\(predictionStr)\n"
+        }
         
-        let row = "\(now),\(elapsed),\(IMUValues.x),\(IMUValues.y),\(IMUValues.z),\(latitude),\(longitude),\(predictionStr)\n"
-        let iphoneRow = "\(now),\(elapsed),\(accelerometerValues.x),\(accelerometerValues.y),\(accelerometerValues.z)\n"
-        
+        var iphoneRow = ""
+        if let accelerometerValues = accelerometerValues {
+            iphoneRow = "\(now),\(elapsed),\(accelerometerValues.x),\(accelerometerValues.y),\(accelerometerValues.z)\n"
+        }
+                
         do {
-            try storageService.append(row: row, to: fileURL)
+            try storageService.append(row: IMURow, to: fileURL)
             try storageService.append(row: iphoneRow, to: iphoneFileURL)
         } catch {
             print("Failed to append row to CSV: \(error)")
@@ -203,6 +200,9 @@ extension SessionViewModel: LocationServiceDelegate {
 extension SessionViewModel: AccelerometerServiceDelegate {
     func didUpdateAccelerometerData(_ data: CMAcceleration) {
         self.accelerometerValues = data
+        if (self.isMetaWearConnected == false) {
+            self.logCurrentData()
+        }
     }
 }
 

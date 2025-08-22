@@ -125,6 +125,17 @@ struct DeviceListView: View {
                 .cornerRadius(16)
                 .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
                 .buttonStyle(ScaleButtonStyle())
+                
+                Button("Continue without MetaWear", action: {
+                    metaWearViewModel.metaWear = nil
+                    Task {
+                        await MainActor.run {
+                            withAnimation(.easeInOut) {
+                                navigationViewModel.setActiveSessionView()
+                            }
+                        }
+                    }
+                })
             }
             .padding(.horizontal)
         }

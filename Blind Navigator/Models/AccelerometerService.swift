@@ -31,22 +31,14 @@ final class AccelerometerService {
             return
         }
         
-        self.manager.accelerometerUpdateInterval = 1.0 / 100.0 // 100 Hz
-        self.manager.startAccelerometerUpdates()
-        
-        self.timer = Timer(fire: Date(), interval: (1.0/50.0),
-                           repeats: true, block: { (timer) in
-            if let data = self.manager.accelerometerData?.acceleration {
-                delegate.didUpdateAccelerometerData(data)
-            }
-        })
-        
-        RunLoop.current.add(self.timer!, forMode: .default)
+        self.manager.deviceMotionUpdateInterval = 1.0 / 100.0 // 100 Hz
+        self.manager.startDeviceMotionUpdates(to: .main) { data, _ in
+            guard let acc = data?.userAcceleration else { return }
+            delegate.didUpdateAccelerometerData(acc)
+        }
     }
     
     func stopUpdating() {
-        self.manager.stopAccelerometerUpdates()
-        self.timer?.invalidate()
-        self.timer = nil
+        self.manager.stopDeviceMotionUpdates()
     }
 }
